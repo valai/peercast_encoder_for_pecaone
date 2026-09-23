@@ -94,10 +94,14 @@ internal sealed class Transcoder : IAsyncDisposable
             "-var_stream_map", hasAudio
                 ? "v:0,a:0,name:high v:1,a:1,name:medium v:2,a:2,name:low"
                 : "v:0,name:high v:1,name:medium v:2,name:low",
-            "-hls_segment_filename", Path.Combine(outputDirectory, "%v", "segment_%06d.ts"),
-            Path.Combine(outputDirectory, "%v", "index.m3u8")]);
+            "-hls_segment_filename", FfmpegPath(outputDirectory, "%v", "segment_%06d.ts"),
+            FfmpegPath(outputDirectory, "%v", "index.m3u8")]);
         return args;
     }
+
+    // FFmpeg writes the variant playlist path into master.m3u8 verbatim.
+    // Windows path separators there are invalid HLS URI separators.
+    private static string FfmpegPath(params string[] parts) => Path.Combine(parts).Replace('\\', '/');
 
     public async ValueTask DisposeAsync()
     {

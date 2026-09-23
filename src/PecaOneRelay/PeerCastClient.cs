@@ -1,5 +1,5 @@
 using System.Net.Http;
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -89,8 +89,9 @@ internal sealed class PeerCastClient : IDisposable
         if (parameters is not null) body["params"] = parameters;
         using var request = new HttpRequestMessage(HttpMethod.Post, _settings.PeerCastUrl + "/api/1")
         {
-            Content = JsonContent.Create(body)
+            Content = new ByteArrayContent(JsonSerializer.SerializeToUtf8Bytes(body))
         };
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         request.Headers.TryAddWithoutValidation("X-Requested-With", "XMLHttpRequest");
         using var response = await _http.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
