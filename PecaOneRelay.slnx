@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PecaOneRelay/PecaOneRelay.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PecaOneRelay.Tests/PecaOneRelay.Tests.csproj" />
+  </Folder>
+</Solution>

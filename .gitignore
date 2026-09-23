@@ -1,0 +1,8 @@
+.tools/
+**/bin/
+**/obj/
+publish/
+artifacts/
+vendor/ffmpeg/
+*.user
+*.suo

@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <WindowsFormsUseLegacyAccessibilityFeatures>false</WindowsFormsUseLegacyAccessibilityFeatures>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\docs\MOBILE_API.md" Link="MOBILE_API.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\vendor\ffmpeg\ffmpeg.exe" Link="ffmpeg\ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\ffmpeg.exe')" />
+    <Content Include="..\..\vendor\ffmpeg\ffprobe.exe" Link="ffmpeg\ffprobe.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\ffprobe.exe')" />
+    <Content Include="..\..\vendor\ffmpeg\LICENSE.txt" Link="ffmpeg\LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\LICENSE.txt')" />
+  </ItemGroup>
+
+</Project>
