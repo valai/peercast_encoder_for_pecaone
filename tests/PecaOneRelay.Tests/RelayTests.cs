@@ -94,6 +94,48 @@ public class RelayTests
     }
 
     [Fact]
+    public async Task SpIndexRequiresPairingAndReturnsWindowsFetchedBytes()
+    {
+        var directory = NewDirectory();
+        try
+        {
+            var settings = new AppState(directory);
+            settings.UpdatePeerCast("http://127.0.0.1:65534", FreePort());
+            using var peerCast = new PeerCastClient(settings);
+            await using var sessions = new SessionManager(peerCast, directory);
+            var fetches = 0;
+            var fail = false;
+            await using var server = new RelayServer(settings, sessions, () => IPAddress.Loopback,
+                _ =>
+                {
+                    fetches++;
+                    if (fail) throw new HttpRequestException("SP unavailable");
+                    return Task.FromResult(System.Text.Encoding.UTF8.GetBytes("SP channel"));
+                });
+            await server.EnsureBoundAsync();
+            using var client = new HttpClient { BaseAddress = new Uri(server.BaseUrl!) };
+            Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/v1/sp/index.txt")).StatusCode);
+            Assert.Equal(0, fetches);
+            var code = JsonDocument.Parse(server.NewPairPayload()!).RootElement.GetProperty("pairCode").GetString();
+            var paired = await client.PostAsJsonAsync("/api/v1/pair", new { pairCode = code });
+            var token = (await paired.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("token").GetString();
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var index = await client.GetAsync("/api/v1/sp/index.txt");
+            Assert.Equal(HttpStatusCode.OK, index.StatusCode);
+            Assert.Equal("SP channel", await index.Content.ReadAsStringAsync());
+            Assert.Equal("no-store", index.Headers.CacheControl?.ToString());
+            Assert.Equal(1, fetches);
+            fail = true;
+            Assert.Equal(HttpStatusCode.BadGateway, (await client.GetAsync("/api/v1/sp/index.txt")).StatusCode);
+            Assert.Equal(2, fetches);
+            settings.Revoke();
+            Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/v1/sp/index.txt")).StatusCode);
+            Assert.Equal(2, fetches);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    [Fact]
     public async Task SessionAllowsOnlyOneChannelAndReportsRelayHealth()
     {
         var directory = NewDirectory();

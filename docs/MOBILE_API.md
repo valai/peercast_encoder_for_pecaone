@@ -14,7 +14,9 @@ Windows の「ペアリングQRを作成」が次の JSON を表示します。`
 
 ## 番組の開始と状態
 
-スマホ側の既存 `Channel` モデルから、FLV 番組の32桁16進 ID と `tracker` の `host:port` を送ります。番組一覧はスマホ側で取得します。
+スマホ側の既存 `Channel` モデルから、FLV 番組の32桁16進 ID と `tracker` の `host:port` を送ります。Windows経由の視聴時、既定のSP一覧だけはWindows側で取得し、それ以外のYPはスマホ側で取得します。
+
+`GET /api/v1/sp/index.txt`（Bearer認証必須）は、Windowsから固定URL `http://bayonet.ddo.jp/sp/index.txt` を取得した内容を返します。SPはWindowsの外部IPでポート判定するため、PeerCastStationの外部リレーポートを開放してください。応答は最大4 MiBで、上流が失敗すると`502`です。APIに任意URLは渡せません。スマホからの直接取得にフォールバックすると判定元が変わるため、失敗時は一覧取得エラーとして扱います。SPの使用ポートを変更する場合やSP自身の詳細な「Port check」を見る場合は、Windows PCのブラウザでSPを開いてください。
 
 ```http
 POST /api/v1/sessions
