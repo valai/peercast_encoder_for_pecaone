@@ -43,6 +43,24 @@ public class RelayTests
         Assert.Equal(expected, PeerCastClient.ValidChannel(id) && PeerCastClient.ValidTracker(tracker));
 
     [Fact]
+    public async Task PeerCastApiRequestsIncludeContentLength()
+    {
+        var directory = NewDirectory();
+        await using var fake = await FakePeerCastStation.CreateAsync();
+        try
+        {
+            var settings = new AppState(directory);
+            settings.UpdatePeerCast(fake.Url, FreePort());
+            using var peerCast = new PeerCastClient(settings);
+            Assert.True((await peerCast.HealthAsync(null)).Online);
+            var stream = await peerCast.StreamUriAsync(
+                "0123456789ABCDEF0123456789ABCDEF", "example.net:7144", CancellationToken.None);
+            Assert.Equal("/stream/0123456789ABCDEF0123456789ABCDEF", stream.AbsolutePath);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
+    [Fact]
     public async Task ApiRequiresPairingAndInvalidatesOldCredential()
     {
         var directory = NewDirectory();
@@ -161,6 +179,9 @@ public class RelayTests
             await transcoder.ExitTask!.WaitAsync(TimeSpan.FromSeconds(90));
             Assert.Equal(0, transcoder.ExitCode);
             var master = File.ReadAllText(Path.Combine(output, "master.m3u8"));
+            var variantPaths = master.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Where(line => !line.StartsWith('#')).ToArray();
+            Assert.Equal(["high/index.m3u8", "medium/index.m3u8", "low/index.m3u8"], variantPaths);
             foreach (var profile in new[] { "high", "medium", "low" })
             {
                 Assert.Contains(profile, master);
@@ -238,6 +259,8 @@ public class RelayTests
             var app = builder.Build();
             app.MapPost("/api/1", async (HttpContext context) =>
             {
+                if (context.Request.ContentLength is null)
+                    return Results.StatusCode(StatusCodes.Status411LengthRequired);
                 using var request = await JsonDocument.ParseAsync(context.Request.Body);
                 var method = request.RootElement.GetProperty("method").GetString();
                 object result = method switch
