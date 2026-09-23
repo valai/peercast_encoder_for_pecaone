@@ -7,7 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace PecaOneRelay;
 
-internal sealed class RelayServer(AppState settings, SessionManager sessions, Func<IPAddress?>? addressProvider = null) : IAsyncDisposable
+internal sealed class RelayServer(
+    AppState settings, SessionManager sessions, Func<IPAddress?>? addressProvider = null,
+    Func<CancellationToken, Task<byte[]>>? spFetcher = null) : IAsyncDisposable
 {
     private readonly SemaphoreSlim _binding = new(1, 1);
     private readonly Func<IPAddress?> _addressProvider = addressProvider ?? TailscaleAddress.Find;
@@ -112,6 +114,23 @@ internal sealed class RelayServer(AppState settings, SessionManager sessions, Fu
             if (!Authorized(context, settings)) return Results.Unauthorized();
             await sessions.StopAsync();
             return Results.NoContent();
+        });
+
+        // SP は要求元の外部 IP と PeerCastStation の公開待受ポートで判定する。
+        // スマホの IP ではなく Windows から直接取得した結果だけを返す。
+        app.MapGet("/api/v1/sp/index.txt", async (HttpContext context) =>
+        {
+            if (!Authorized(context, settings)) return Results.Unauthorized();
+            try
+            {
+                var bytes = await (spFetcher ?? SpDirectoryClient.FetchAsync)(context.RequestAborted);
+                context.Response.Headers.CacheControl = "no-store";
+                return Results.Bytes(bytes, "text/plain; charset=utf-8");
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or IOException)
+            {
+                return Results.Json(new { error = "sp_fetch_failed" }, statusCode: 502);
+            }
         });
 
         app.MapGet("/hls/{sessionId}/{ticket}/{**file}", (HttpContext context, string sessionId, string ticket, string file) =>

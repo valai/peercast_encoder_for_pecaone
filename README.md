@@ -11,7 +11,7 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 - Windows PC とスマホが同じ Tailscale ネットワークに参加していること。HLS 用 TCP 17444 は Tailscale 上で Windows ファイアウォールに許可してください。公開インターネットへ転送しないでください。
 - 配布物には FFmpeg 9.0.2 GPL ビルドを同梱します。開発時は `scripts/prepare-ffmpeg.ps1` で取得します。
 
-起動するとトレイで常駐します。ウィンドウを閉じても待機し、終了はトレイメニューから行います。Tailscale 接続時だけ API を開始します。スマホは QR からペアリングし、既存の YP 一覧で選んだ FLV 番組の ID と tracker を API に送ります。
+起動するとトレイで常駐します。ウィンドウを閉じても待機し、終了はトレイメニューから行います。Tailscale 接続時だけ API を開始します。スマホは QR からペアリングし、YP 一覧で選んだ FLV 番組の ID と tracker を API に送ります。Windows経由での視聴時には、既定のSPチャンネル一覧をWindowsから取得するAPIも提供します。SPで使うポートを変更している場合は、Windows PCのブラウザからSPの設定を確認してください。
 
 ## 配布 ZIP から起動
 
