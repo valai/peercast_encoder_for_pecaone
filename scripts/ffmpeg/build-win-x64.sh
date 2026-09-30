@@ -43,7 +43,7 @@ cd "$work/build/ffmpeg-$FFMPEG_VERSION"
     --enable-gpl --enable-version3 --enable-libx264 --enable-schannel \
     --disable-debug --disable-doc --disable-ffplay --disable-everything \
     --enable-ffmpeg --enable-ffprobe --enable-network --enable-w32threads \
-    --enable-decoder=h264,hevc,flv,vp6,vp6a,vp6f,aac,aac_fixed,mp3,mp3float,nellymoser,adpcm_swf,pcm_s16le,pcm_s16be \
+    --enable-decoder=h264,hevc,flv,vp6,vp6a,vp6f,aac,aac_fixed,mp3,mp3float,nellymoser,adpcm_swf,pcm_s16le,pcm_s16be,wrapped_avframe \
     --enable-encoder=libx264,aac --enable-demuxer=flv,mpegts,mov \
     --enable-muxer=flv,hls,mpegts --enable-parser=aac,aac_latm,h264,hevc,mpegaudio \
     --enable-protocol=file,http,https,tcp,tls,pipe,crypto \
