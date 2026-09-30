@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <Product>ぺかわん コネクト</Product>
+    <AssemblyTitle>ぺかわん コネクト</AssemblyTitle>
+    <Version>1.0.0</Version>
+    <RuntimeFrameworkVersion>10.0.12</RuntimeFrameworkVersion>
+    <IncludeFfmpeg Condition="'$(IncludeFfmpeg)' == ''">true</IncludeFfmpeg>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -20,9 +25,10 @@
     <None Include="..\..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\THIRD_PARTY_NOTICES.md" Link="THIRD_PARTY_NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\vendor\ffmpeg\ffmpeg.exe" Link="ffmpeg\ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\ffmpeg.exe')" />
-    <Content Include="..\..\vendor\ffmpeg\ffprobe.exe" Link="ffmpeg\ffprobe.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\ffprobe.exe')" />
-    <Content Include="..\..\vendor\ffmpeg\LICENSE.txt" Link="ffmpeg\LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="Exists('..\..\vendor\ffmpeg\LICENSE.txt')" />
+    <None Include="..\..\licenses\**\*" Link="licenses\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\vendor\ffmpeg\ffmpeg.exe" Link="ffmpeg\ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="'$(IncludeFfmpeg)' == 'true' and Exists('..\..\vendor\ffmpeg\ffmpeg.exe')" />
+    <Content Include="..\..\vendor\ffmpeg\ffprobe.exe" Link="ffmpeg\ffprobe.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="'$(IncludeFfmpeg)' == 'true' and Exists('..\..\vendor\ffmpeg\ffprobe.exe')" />
+    <Content Include="..\..\vendor\ffmpeg\LICENSE.txt" Link="ffmpeg\LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="Always" Condition="'$(IncludeFfmpeg)' == 'true' and Exists('..\..\vendor\ffmpeg\LICENSE.txt')" />
   </ItemGroup>
 
 </Project>

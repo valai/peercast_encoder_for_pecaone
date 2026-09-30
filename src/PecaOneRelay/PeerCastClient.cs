@@ -69,7 +69,7 @@ internal sealed class PeerCastClient : IDisposable
 
     public async Task<Uri> StreamUriAsync(string channelId, string tracker, CancellationToken cancellationToken)
     {
-        if (!ValidChannel(channelId) || !ValidTracker(tracker)) throw new ArgumentException("FLV番組のIDまたはトラッカーが不正です");
+        if (!ValidChannel(channelId) || !ValidTracker(tracker)) throw new ArgumentException("FLVチャンネルのIDまたはトラッカーが不正です");
         using var _ = await CallAsync("getVersionInfo", null, cancellationToken);
         string? auth = null;
         try

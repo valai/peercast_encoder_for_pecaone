@@ -1,4 +1,4 @@
-param([switch]$TestOnly)
+param([switch]$TestOnly, [switch]$ForRelease)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $localDotnet = Join-Path $repo '.tools\dotnet\dotnet.exe'
@@ -17,21 +17,37 @@ try {
     & $dotnet test PecaOneRelay.slnx -c Release --no-restore
     if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
     if (-not $TestOnly) {
+        $packageDirectory = if ($ForRelease) {
+            Join-Path $repo ('publish\release-staging-' + [Guid]::NewGuid().ToString('N'))
+        } else { Join-Path $repo 'publish\win-x64' }
+        $includeFfmpeg = if ($ForRelease) { 'false' } else { 'true' }
         & $dotnet restore src\PecaOneRelay\PecaOneRelay.csproj -r win-x64 --configfile NuGet.Config
         if ($LASTEXITCODE -ne 0) { throw 'Publish restore failed' }
-        & $dotnet publish src\PecaOneRelay\PecaOneRelay.csproj -c Release -r win-x64 --self-contained true --no-restore -o publish\win-x64
+        & $dotnet publish src\PecaOneRelay\PecaOneRelay.csproj -c Release -r win-x64 --self-contained true --no-restore -p:IncludeFfmpeg=$includeFfmpeg -o $packageDirectory
         if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
-        $archive = Join-Path $repo 'publish\PecaOneRelay-win-x64.zip'
+        $archiveName = if ($ForRelease) { 'PecaOneConnect-v1.0.0-win-x64.zip' } else { 'PecaOneRelay-win-x64.zip' }
+        $archive = Join-Path $repo ('publish\' + $archiveName)
+        if ($ForRelease) {
+            Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Install-FFmpeg.ps1') -Destination $packageDirectory
+            Copy-Item -LiteralPath (Join-Path $repo 'docs\FIRST_RUN.md') -Destination $packageDirectory
+            if (Test-Path -LiteralPath (Join-Path $packageDirectory 'ffmpeg')) { throw 'Public package must not bundle FFmpeg.' }
+        }
+        foreach ($required in @('PecaOneRelay.exe', 'coreclr.dll', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+            'licenses\QRCoder-LICENSE.txt', 'licenses\NET-Runtime-LICENSE.txt',
+            'licenses\NET-Runtime-THIRD-PARTY-NOTICES.txt', 'licenses\Windows-Desktop-LICENSE.txt',
+            'licenses\ASP-NET-Core-LICENSE.txt', 'licenses\ASP-NET-Core-THIRD-PARTY-NOTICES.txt')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $packageDirectory $required) -PathType Leaf)) { throw ('Missing package file: ' + $required) }
+        }
         if (Test-Path $archive) { Remove-Item -LiteralPath $archive -Force }
         Add-Type -AssemblyName System.IO.Compression.FileSystem
         [System.IO.Compression.ZipFile]::CreateFromDirectory(
-            (Join-Path $repo 'publish\win-x64'),
+            $packageDirectory,
             $archive,
             [System.IO.Compression.CompressionLevel]::Optimal,
             $false
         )
-        "$(Get-FileHash $archive -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  PecaOneRelay-win-x64.zip" |
-            Set-Content (Join-Path $repo 'publish\PecaOneRelay-win-x64.zip.sha256')
+        "$(Get-FileHash $archive -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  $archiveName" |
+            Set-Content -LiteralPath ($archive + '.sha256') -Encoding ascii
     }
 } finally {
     Pop-Location

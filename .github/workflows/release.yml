@@ -1,0 +1,68 @@
+name: Release v1.0.0
+
+on:
+  push:
+    tags:
+      - v1.0.0
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.401
+      - name: Build and test public package
+        shell: pwsh
+        run: ./scripts/build.ps1 -ForRelease
+      - name: Prepare corresponding source and checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git archive --format=zip --prefix=PecaOneConnect-v1.0.0-source/ --output=publish/PecaOneConnect-v1.0.0-source.zip HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Source archive failed' }
+          $qrcoderSource = 'https://codeload.github.com/Shane32/QRCoder/zip/443d5a1f76debf203b1e252efee6996a15d41f5c'
+          Invoke-WebRequest -Uri $qrcoderSource -OutFile publish/QRCoder-1.8.0-source.zip -TimeoutSec 120
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $sourceZip = [IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'publish/QRCoder-1.8.0-source.zip'))
+          try {
+            if (-not ($sourceZip.Entries | Where-Object { $_.FullName.EndsWith('/LICENSE') -or $_.FullName.EndsWith('/LICENSE.txt') })) {
+              throw 'QRCoder source archive has no license'
+            }
+          } finally { $sourceZip.Dispose() }
+          $assets = @('PecaOneConnect-v1.0.0-win-x64.zip', 'PecaOneConnect-v1.0.0-source.zip', 'QRCoder-1.8.0-source.zip')
+          $checksums = foreach ($asset in $assets) {
+            ((Get-FileHash -LiteralPath (Join-Path 'publish' $asset) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $asset)
+          }
+          $checksums | Set-Content -LiteralPath publish/SHA256SUMS.txt -Encoding ascii
+      - name: Publish release with all assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = '${{ github.repository }}'
+          $tag = 'v1.0.0'
+          gh release view $tag --repo $repo 2>$null
+          if ($LASTEXITCODE -eq 0) { throw 'A release already exists for this tag; it will not be overwritten.' }
+          $assets = @('publish/PecaOneConnect-v1.0.0-win-x64.zip', 'publish/PecaOneConnect-v1.0.0-source.zip', 'publish/QRCoder-1.8.0-source.zip', 'publish/SHA256SUMS.txt')
+          gh release create $tag @assets --repo $repo --verify-tag --title 'ぺかわん コネクト v1.0.0' --notes-file docs/RELEASE-v1.0.0.md --draft
+          if ($LASTEXITCODE -ne 0) { throw 'Draft creation or asset upload failed' }
+          $release = gh release view $tag --repo $repo --json assets,isDraft | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or -not $release.isDraft) { throw 'Draft verification failed' }
+          foreach ($asset in $assets) {
+            $file = Get-Item -LiteralPath $asset
+            $uploaded = @($release.assets | Where-Object { $_.name -eq $file.Name })
+            if ($uploaded.Count -ne 1 -or $uploaded[0].size -ne $file.Length) { throw ('Asset verification failed: ' + $file.Name) }
+          }
+          gh release edit $tag --repo $repo --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
