@@ -15,9 +15,11 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 
 ## 配布 ZIP から起動
 
-[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0)から `PecaOneConnect-v1.0.0-portable-win-x64.zip` を取得し、右クリックして「すべて展開」を選び、`PecaOneRelay.exe` を起動してください。.NETランタイムとFFmpegを同梱しているため、別途取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
+[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0)から `PecaOneConnect-v1.0.0-portable-r2-win-x64.zip` を取得し、右クリックして「すべて展開」を選び、展開直下の `ぺかわん コネクト.exe` を起動してください。.NETランタイムとFFmpegを同梱しているため、別途取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
 
-導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。`SHA256SUMS-portable.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
+展開直下には `ぺかわん コネクト.exe`、`はじめに.txt`、`app/` の3つだけを置き、アプリ本体・DLL・FFmpeg・ライセンスは `app/` にまとめています。移動するときはフォルダ全体を移動してください。デスクトップにはEXEのショートカットを作成できます。
+
+導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。`SHA256SUMS-r2.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
 
 ## 開発環境から起動
 
@@ -41,6 +43,8 @@ SDK が `.tools/dotnet` にある場合はそれを使用し、なければ `PAT
 通常のビルドでは `publish/win-x64` に .NET ランタイム、アプリ、FFmpeg を含むローカル確認用フォルダを作り、`publish/PecaOneRelay-win-x64.zip` と SHA-256 ファイルを生成します。
 
 同梱版は `scripts/ffmpeg/build-win-x64.sh` でFFmpegと対応ソースを作成し、Windowsでテスト後、`scripts/Build-BundledPackage.ps1` で公開済みv1.0.0のアプリに同梱します。`publish/PecaOneConnect-v1.0.0-portable-win-x64.zip` とFFmpegの対応ソースZIP、チェックサムを作成します。詳細は [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) を参照してください。
+
+現在の配布構成は、Visual Studio C++ Build ToolsとWindows SDKのあるWindowsで `scripts/Build-Launcher.ps1` を実行し、公開済みの同梱版を `scripts/Build-PortableLayout.ps1` で整理して作成します。`scripts/Test-Launcher.ps1` と `scripts/Test-PortableLayout.ps1 -LaunchApp` で起動を検証します。公開処理は `.github/workflows/layout-release.yml` にあります。
 
 `./scripts/build.ps1 -ForRelease` は当初のFFmpeg別取得版を生成するコマンドです。公開済みのファイルを再配布するときは、ビルドに対応するソースを必ず揃えてください。
 

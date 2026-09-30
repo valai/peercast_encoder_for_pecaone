@@ -2,14 +2,26 @@
 
 ## v1.0.0の配布物
 
-- `PecaOneConnect-v1.0.0-portable-win-x64.zip`: 推奨する同梱版。アプリ、.NETランタイム、FFmpeg、ライセンス、初回導入手順。
+- `PecaOneConnect-v1.0.0-portable-r2-win-x64.zip`: 推奨する同梱版。展開直下は起動用EXE、はじめに.txt、appフォルダ。アプリ、.NETランタイム、FFmpeg、ライセンスをappにまとめています。
+- `PecaOneConnect-v1.0.0-launcher-source.zip`: 起動用EXEの正確なソース、ビルド・梱包スクリプト、ライセンス。
+- `SHA256SUMS-r2.txt`: 整理した同梱版と起動用EXEのソースZIPのチェックサム。
 - `FFmpeg-9.0.2-x264-source.zip`: 同梱するFFmpegとx264の対応ソース、ビルド手順、構成、ライセンス。
-- `SHA256SUMS-portable.txt`: 同梱版とFFmpegソースZIPのチェックサム。
+- `PecaOneConnect-v1.0.0-portable-win-x64.zip`、`SHA256SUMS-portable.txt`: 以前の同梱版とチェックサム。既存の配布物として保持します。
 - `PecaOneConnect-v1.0.0-source.zip`: リリース対象コミットのアプリソースとビルドスクリプト。
 - `QRCoder-1.8.0-source.zip`: NuGetパッケージが示すコミットのQRCoderソース。
 - `PecaOneConnect-v1.0.0-win-x64.zip`、`SHA256SUMS.txt`: 当初のFFmpeg別取得版とそのチェックサム。既存の配布物として保持します。
 
-同梱版の利用者はZIPを展開して `PecaOneRelay.exe` を起動します。FFmpegの取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
+同梱版の利用者はZIPを展開して、直下の `ぺかわん コネクト.exe` を起動します。FFmpegの取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
+
+## 現在の配布構成の再現
+
+`.github/workflows/layout-release.yml` は、検証済みの同梱版を再利用してフォルダ構成を整理します。アプリ本体とFFmpegのEXE/DLLを再ビルドせず、元のファイルとのSHA-256一致を確認します。
+
+1. WindowsでVisual Studio C++ Build Tools（x64用C++ツール）とWindows SDKを用意します。
+2. `./scripts/Build-Launcher.ps1` と `./scripts/Test-Launcher.ps1` を実行します。日本語・空白を含む展開先と、起動元の作業フォルダが異なる場合の動作を検証します。
+3. 公開済み `PecaOneConnect-v1.0.0-portable-win-x64.zip` を `publish/` に取得し、`./scripts/Build-PortableLayout.ps1` を実行します。公開済みのSHA-256と照合してから `portable-r2` を作成します。
+4. `./scripts/Test-PortableLayout.ps1 -LaunchApp` を実行します。ZIP構成・元の全EXE/DLLの一致・FFmpeg動作・アプリのウィンドウ初期化を検証します。実行はアプリを使用中のPCを避け、CIなどの検証環境で行ってください。
+5. ワークフローと同様に対象コミットの起動用EXEの対応ソースZIPとチェックサムを作成し、対応ソース、同梱版、チェックサムの順に同じリリースへ添付します。FFmpegとQRCoder、アプリ本体の対応ソースも引き続き提供します。
 
 ## リリースの再現
 

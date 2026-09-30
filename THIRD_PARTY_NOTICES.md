@@ -2,7 +2,7 @@
 
 ## FFmpeg
 
-The recommended `PecaOneConnect-v1.0.0-portable-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files.
+The recommended `PecaOneConnect-v1.0.0-portable-r2-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe under `app/ffmpeg/`, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files. Paths below are relative to this notice inside `app/`.
 
 The complete corresponding-source package, **FFmpeg-9.0.2-x264-source.zip**, is available from the same release:
 
@@ -46,3 +46,7 @@ PeerCastStation is installed separately and is not included in this application'
 Tailscale is also installed separately: https://tailscale.com/download
 
 The application itself is GPL-3.0-or-later (`LICENSE`). Its exact source is provided in the same release as the public Windows ZIP.
+
+## Native launcher
+
+The root `ぺかわん コネクト.exe` launcher is GPL-3.0-or-later. Copyright (c) 2026 PecaOne Connect contributors. The complete license is in `LICENSE`. Its corresponding source and build/packaging scripts are supplied in **PecaOneConnect-v1.0.0-launcher-source.zip** at the same v1.0.0 release URL above. The archive includes `native/launcher/`, `scripts/Build-Launcher.ps1`, and `scripts/Build-PortableLayout.ps1`; `LAUNCHER-BUILDINFO.txt` identifies the exact source commit and compiler version. It imports only Windows system DLLs and starts the unchanged application under `app/`.

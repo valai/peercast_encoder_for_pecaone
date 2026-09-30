@@ -1,0 +1,83 @@
+name: Add organized portable v1.0.0 package
+
+on:
+  push:
+    branches: [codex/change-paring-label]
+    paths:
+      - .github/workflows/layout-release.yml
+      - native/launcher/**
+      - scripts/Build-Launcher.ps1
+      - scripts/Build-PortableLayout.ps1
+      - scripts/Test-Launcher.ps1
+      - scripts/Test-PortableLayout.ps1
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portable-layout-v1.0.0
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and test the native launcher
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            ./scripts/Build-Launcher.ps1
+            ./scripts/Test-Launcher.ps1
+          } catch {
+            $message = $_.ToString().Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error::$message"
+            throw
+          }
+      - name: Repackage verified binaries and test application startup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            New-Item -ItemType Directory -Path publish -Force | Out-Null
+            Invoke-WebRequest -Uri 'https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/PecaOneConnect-v1.0.0-portable-win-x64.zip' -OutFile publish/PecaOneConnect-v1.0.0-portable-win-x64.zip -TimeoutSec 180
+            ./scripts/Build-PortableLayout.ps1
+            ./scripts/Test-PortableLayout.ps1 -LaunchApp
+            git -c core.autocrlf=false archive --format=zip --prefix=PecaOneConnect-launcher-v1.0.0/ --output=publish/PecaOneConnect-v1.0.0-launcher-source.zip HEAD
+            if ($LASTEXITCODE -ne 0) { throw 'Launcher source archive creation failed.' }
+            $files = @('PecaOneConnect-v1.0.0-portable-r2-win-x64.zip', 'PecaOneConnect-v1.0.0-launcher-source.zip')
+            $checksums = foreach ($file in $files) {
+              (Get-FileHash -LiteralPath (Join-Path publish $file) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $file
+            }
+            $checksums | Set-Content -LiteralPath publish/SHA256SUMS-r2.txt -Encoding ascii
+          } catch {
+            $message = $_.ToString().Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error::$message"
+            throw
+          }
+      - name: Publish source then the organized package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = '${{ github.repository }}'
+          gh release upload v1.0.0 publish/PecaOneConnect-v1.0.0-launcher-source.zip --repo $repo
+          if ($LASTEXITCODE -ne 0) { throw 'Launcher source upload failed. Existing assets were not overwritten.' }
+          gh release upload v1.0.0 publish/PecaOneConnect-v1.0.0-portable-r2-win-x64.zip publish/SHA256SUMS-r2.txt --repo $repo
+          if ($LASTEXITCODE -ne 0) { throw 'Organized package upload failed. Existing assets were not overwritten.' }
+          $release = gh api "repos/$repo/releases/tags/v1.0.0" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $release.draft) { throw 'Release verification failed.' }
+          foreach ($name in @('PecaOneConnect-v1.0.0-portable-r2-win-x64.zip', 'PecaOneConnect-v1.0.0-launcher-source.zip', 'SHA256SUMS-r2.txt')) {
+            $file = Get-Item -LiteralPath (Join-Path publish $name)
+            $asset = @($release.assets | Where-Object { $_.name -eq $name })
+            if ($asset.Count -ne 1 -or $asset[0].size -ne $file.Length) { throw ('Uploaded asset size mismatch: ' + $name) }
+            $digest = 'sha256:' + (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($asset[0].digest -and $asset[0].digest -ne $digest) { throw ('Uploaded asset digest mismatch: ' + $name) }
+          }
+          gh release edit v1.0.0 --repo $repo --notes-file docs/RELEASE-v1.0.0.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed.' }
