@@ -9,15 +9,15 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 - Windows 10 22H2 以降または Windows 11、x64。
 - PeerCastStation 6.0.1。ローカル管理 API が使えること。PeerCast 網へのリレーには同アプリの外部ポート開放が必要です。
 - Windows PC とスマホが同じ Tailscale ネットワークに参加していること。HLS 用 TCP 17444 は Tailscale 上で Windows ファイアウォールに許可してください。公開インターネットへ転送しないでください。
-- 公開ZIPの初回起動前に、同梱の `Install-FFmpeg.ps1` で FFmpeg 9.0 系を取得します。開発時は `scripts/prepare-ffmpeg.ps1` で準備します。v1.0.0は9.0.2で検証しています。
+- 公開する同梱版にはFFmpeg 9.0.2が含まれています。開発時は `scripts/prepare-ffmpeg.ps1` で準備できます。
 
 起動するとトレイで常駐します。ウィンドウを閉じても待機し、終了はトレイメニューから行います。Tailscale 接続時だけ API を開始します。スマホは QR からペアリングし、YP 一覧で選んだ FLV チャンネルの ID と tracker を API に送ります。Windows経由での視聴時には、既定のSPチャンネル一覧をWindowsから取得するAPIも提供します。SPで使うポートを変更している場合は、Windows PCのブラウザからSPの設定を確認してください。
 
 ## 配布 ZIP から起動
 
-[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases)から `PecaOneConnect-v1.0.0-win-x64.zip` を取得し、右クリックして「すべて展開」を選びます。初回だけ、展開先の PowerShell で `./Install-FFmpeg.ps1` を実行してから `PecaOneRelay.exe` を起動してください。.NET ランタイムは同梱しています。FFmpegは配布元から別途取得します。
+[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0)から `PecaOneConnect-v1.0.0-portable-win-x64.zip` を取得し、右クリックして「すべて展開」を選び、`PecaOneRelay.exe` を起動してください。.NETランタイムとFFmpegを同梱しているため、別途取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
 
-導入手順、手動でのFFmpeg配置方法、接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。`SHA256SUMS.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
+導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。`SHA256SUMS-portable.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
 
 ## 開発環境から起動
 
@@ -40,7 +40,9 @@ SDK が `.tools/dotnet` にある場合はそれを使用し、なければ `PAT
 
 通常のビルドでは `publish/win-x64` に .NET ランタイム、アプリ、FFmpeg を含むローカル確認用フォルダを作り、`publish/PecaOneRelay-win-x64.zip` と SHA-256 ファイルを生成します。
 
-公開用のZIPは `./scripts/build.ps1 -ForRelease` で作成します。FFmpegのバイナリを含めず、導入スクリプトと手順を添えた `publish/PecaOneConnect-v1.0.0-win-x64.zip` ができます。公開条件と再配布手順は [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) を参照してください。
+同梱版は `scripts/ffmpeg/build-win-x64.sh` でFFmpegと対応ソースを作成し、Windowsでテスト後、`scripts/Build-BundledPackage.ps1` で公開済みv1.0.0のアプリに同梱します。`publish/PecaOneConnect-v1.0.0-portable-win-x64.zip` とFFmpegの対応ソースZIP、チェックサムを作成します。詳細は [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) を参照してください。
+
+`./scripts/build.ps1 -ForRelease` は当初のFFmpeg別取得版を生成するコマンドです。公開済みのファイルを再配布するときは、ビルドに対応するソースを必ず揃えてください。
 
 ## 検証
 

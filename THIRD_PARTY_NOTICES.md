@@ -2,19 +2,27 @@
 
 ## FFmpeg
 
-The public v1.0.0 Windows ZIP does not include FFmpeg executables. `Install-FFmpeg.ps1` obtains the Windows x64 GPL build from the FFmpeg 9.0 release branch directly from [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases/tag/latest). It verifies the archive against the provider's GitHub SHA-256 digest, copies the provider's `LICENSE.txt`, and records the URL and digest in `ffmpeg/ORIGIN.json`.
+The recommended `PecaOneConnect-v1.0.0-portable-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files.
 
-The application has been tested with FFmpeg **n9.0.2-20260919**, build tag `autobuild-2026-09-19-13-11`:
+The complete corresponding-source package, **FFmpeg-9.0.2-x264-source.zip**, is available from the same release:
 
-- Binary archive: https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-19-13-11/ffmpeg-n9.0.2-win64-gpl-9.0.zip
-- Archive SHA-256: `44083538105B4E64D439F9E67BD875BD264B4271239C808B2ACEA09773AD1AA3`
-- Corresponding FFmpeg source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
-- Build scripts and third-party component recipes: https://github.com/BtbN/FFmpeg-Builds/tree/3e6685e
-- License text shipped in `ffmpeg/LICENSE.txt`; FFmpeg licensing information: https://ffmpeg.org/legal.html
+https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0
 
-FFmpeg and its encoders are separate programs invoked by this application. These source references do not represent a verified complete corresponding-source bundle for the static binary. Before redistributing FFmpeg binaries, obtain and provide the exact source, included dependency sources, patches, build instructions, and license texts, following GPL section 6. See `docs/DISTRIBUTION.md` in the source tree.
+It includes the two source archives used to build the executables, the unmodified build script and source pins, the configuration, compiler/package versions, source checksums, and license texts. The source need not be downloaded for normal application use.
 
-Daily binary releases have limited retention. The installer uses the maintained `latest` release and the 9.0 branch, with digest verification, instead of relying on an expiring daily tag.
+- FFmpeg source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+- FFmpeg source SHA-256: `8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e`
+- FFmpeg's release signature was verified with fingerprint `FCF986EA15E6E293A5644F10B4322F04D67658D8`.
+- x264 source: https://code.videolan.org/videolan/x264/-/tree/0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee
+- Source/build details: `ffmpeg/BUILDINFO.txt`, `ffmpeg/README.md`, and the source ZIP.
+- Complete FFmpeg license text: `ffmpeg/LICENSE.txt` and `ffmpeg/licenses/`.
+- x264 license: `ffmpeg/licenses/x264-COPYING.txt`.
+- MinGW/GCC copyright and runtime notices: `ffmpeg/licenses/*copyright.txt`.
+- FFmpeg licensing information: https://ffmpeg.org/legal.html
+
+The only external codec library is x264; no other third-party codec/rendering/device libraries are compiled in. The unmodified MinGW toolchain uses the Win32 thread model. The executables are statically linked and import only Windows system DLLs. There are no source patches. FFmpeg is a separate process invoked by the application.
+
+The earlier `PecaOneConnect-v1.0.0-win-x64.zip` is retained for existing users. It excludes FFmpeg and has an optional setup script which downloads it directly from BtbN/FFmpeg-Builds. Development-only builds may also use that provider; they are not the binaries shipped in the portable package.
 
 ## QRCoder
 

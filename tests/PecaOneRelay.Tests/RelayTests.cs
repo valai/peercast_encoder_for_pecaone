@@ -200,12 +200,13 @@ public class RelayTests
     }
 
     [Theory]
-    [InlineData(320, 180, 320, 180, 320, 180, 320, 180)]
-    [InlineData(1920, 1080, 1920, 1080, 854, 480, 426, 240)]
-    [InlineData(640, 480, 640, 480, 640, 480, 320, 240)]
+    [InlineData(320, 180, 320, 180, 320, 180, 320, 180, true)]
+    [InlineData(1920, 1080, 1920, 1080, 854, 480, 426, 240, true)]
+    [InlineData(640, 480, 640, 480, 640, 480, 320, 240, true)]
+    [InlineData(640, 360, 640, 360, 640, 360, 426, 240, false)]
     public async Task FfmpegProducesThreeHlsVariants(
         int sourceWidth, int sourceHeight, int highWidth, int highHeight,
-        int mediumWidth, int mediumHeight, int lowWidth, int lowHeight)
+        int mediumWidth, int mediumHeight, int lowWidth, int lowHeight, bool hasAudio)
     {
         var directory = NewDirectory();
         try
@@ -213,13 +214,19 @@ public class RelayTests
             var ffmpeg = Transcoder.ToolPath("ffmpeg.exe");
             Assert.True(File.Exists(ffmpeg), "Run prepare-ffmpeg.ps1 before the tests.");
             var input = Path.Combine(directory, "input.flv");
-            await RunAsync(ffmpeg, ["-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", $"testsrc2=size={sourceWidth}x{sourceHeight}:rate=30",
-                "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000", "-t", "8", "-c:v", "libx264",
-                "-pix_fmt", "yuv420p", "-c:a", "aac", "-f", "flv", input]);
+            var inputArguments = new List<string>
+            {
+                "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", $"testsrc2=size={sourceWidth}x{sourceHeight}:rate=30"
+            };
+            if (hasAudio) inputArguments.AddRange(["-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000"]);
+            inputArguments.AddRange(["-t", "8", "-c:v", "libx264", "-pix_fmt", "yuv420p"]);
+            if (hasAudio) inputArguments.AddRange(["-c:a", "aac"]);
+            inputArguments.AddRange(["-f", "flv", input]);
+            await RunAsync(ffmpeg, inputArguments.ToArray());
             var source = new Uri(input);
             var probe = await Transcoder.ProbeAsync(source, CancellationToken.None);
             Assert.True(probe.HasVideo);
-            Assert.True(probe.HasAudio);
+            Assert.Equal(hasAudio, probe.HasAudio);
             var output = Path.Combine(directory, "hls");
             await using var transcoder = new Transcoder();
             transcoder.Start(source, output, probe.HasAudio);

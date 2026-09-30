@@ -2,21 +2,25 @@
 
 ## v1.0.0の配布物
 
-- `PecaOneConnect-v1.0.0-win-x64.zip`: アプリ、.NETランタイム、ライセンス、初回導入手順、FFmpeg取得スクリプト。
+- `PecaOneConnect-v1.0.0-portable-win-x64.zip`: 推奨する同梱版。アプリ、.NETランタイム、FFmpeg、ライセンス、初回導入手順。
+- `FFmpeg-9.0.2-x264-source.zip`: 同梱するFFmpegとx264の対応ソース、ビルド手順、構成、ライセンス。
+- `SHA256SUMS-portable.txt`: 同梱版とFFmpegソースZIPのチェックサム。
 - `PecaOneConnect-v1.0.0-source.zip`: リリース対象コミットのアプリソースとビルドスクリプト。
 - `QRCoder-1.8.0-source.zip`: NuGetパッケージが示すコミットのQRCoderソース。
-- `SHA256SUMS.txt`: 上記ZIPのチェックサム。
+- `PecaOneConnect-v1.0.0-win-x64.zip`、`SHA256SUMS.txt`: 当初のFFmpeg別取得版とそのチェックサム。既存の配布物として保持します。
 
-公開用ZIPにはFFmpegのバイナリを含めません。ユーザーは配布元から直接取得します。PeerCastStationとTailscaleも別途必要です。
+同梱版の利用者はZIPを展開して `PecaOneRelay.exe` を起動します。FFmpegの取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
 
 ## リリースの再現
 
-1. `v1.0.0` タグのソースを取得し、.NET SDK 10.0.401を用意します。
-2. PowerShellで `./scripts/build.ps1 -ForRelease` を実行します。FFmpegの準備、復元、テスト、公開用ZIPの作成を行います。
-3. `git archive --format=zip --prefix=PecaOneConnect-v1.0.0-source/ --output=publish/PecaOneConnect-v1.0.0-source.zip v1.0.0` でアプリソースを作成します。
-4. QRCoderの対応ソースを取得し、全ZIPのSHA-256を作成します。GitHub Actionsのリリースワークフローでは、この作業とアップロードを自動で行います。
+アプリのEXE/DLLは当初のv1.0.0と同じです。対応するアプリソースは `v1.0.0` タグと `PecaOneConnect-v1.0.0-source.zip` で提供します。同梱版の作成は `.github/workflows/bundled-release.yml` で行います。
 
-初回の公開ワークフローは `v1.0.0` タグのpushを対象とし、配布物をすべて添付した下書きを作ってから公開します。既存の同名リリースを上書きしません。
+1. Ubuntu 24.04で `scripts/ffmpeg/README.md` に記載したMinGWとビルドツールを用意します。
+2. `bash scripts/ffmpeg/build-win-x64.sh "$PWD/.tools/ffmpeg-build" "$PWD/artifacts"` を実行し、Windows用FFmpegと対応ソースZIPを作成します。元のソースから再ビルドするときは、FFmpegソースZIP内の手順に従ってください。
+3. Windowsへ `artifacts/ffmpeg-win-x64` と `artifacts/FFmpeg-9.0.2-x264-source.zip` をコピーします。
+4. FFmpegフォルダの内容を `vendor/ffmpeg` に配置し、.NET SDK 10.0.401で `./scripts/build.ps1 -TestOnly` を実行します。
+5. 公開済みの `PecaOneConnect-v1.0.0-win-x64.zip` を `publish/` に取得し、`./scripts/Build-BundledPackage.ps1` を実行します。アプリZIPのSHA-256を公開済みの値と照合し、FFmpegと対応ソースの存在・チェックサムを確認してから同梱します。
+6. 同梱版ZIP、FFmpegのソースZIP、`SHA256SUMS-portable.txt` を同じリリースに添付します。既存の配布物とタグは上書きしません。
 
 ## FFmpegを同梱して再配布する場合
 
@@ -27,7 +31,9 @@ FFmpegのGPL版を配布する場合は、GPL第6条に沿った対応ソース�
 3. 同じリリースに対応ソースを添付するか、GPL第6条に沿って同等の取得手段を明示し、必要な期間利用できるように維持します。
 4. ライセンスとソース取得先をZIPとリリース説明に記載してから、バイナリを含むZIPを公開します。
 
-現在のBtbN静的ビルドについては完全な対応ソース一式を確認できていないため、通常ビルドのFFmpeg同梱ZIPはローカル確認用として扱います。
+同梱版ではFFmpeg 9.0.2と固定コミットのx264だけを用いてビルドしています。ソースZIPには使用したソースアーカイブそのもの、ビルドスクリプト、構成、ライセンスを保存します。`BUILDINFO.txt` はコンパイラとツールのバージョン、WindowsシステムDLL以外への依存がないことを記録します。
+
+通常の `build.ps1` がBtbNのFFmpegを利用して生成するZIPは、対応ソースを揃えていないローカル確認用です。同梱版の代わりにそのZIPを公開しないでください。
 
 参考: [GPL第6条](https://www.gnu.org/licenses/gpl-3.0.html#section6)、[FFmpegのライセンス案内](https://ffmpeg.org/legal.html)。商用利用や特許など個別の法的判断が必要な場合は専門家へ確認してください。
 

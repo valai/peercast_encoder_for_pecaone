@@ -4,17 +4,16 @@ Windows 10 22H2 以降または Windows 11 の64ビット版に対応してい�
 
 1. ZIPを右クリックして「すべて展開」を選び、書き込み可能なフォルダへ展開します。
 2. PeerCastStation と Tailscale を別途インストールします。PCとスマホを同じ Tailscale ネットワークへ接続してください。
-3. 初回だけ、展開先の PowerShell で `./Install-FFmpeg.ps1` を実行します。FFmpeg 9.0 系を配布元の BtbN/FFmpeg-Builds から取得し、配布元が示す SHA-256 と一致したファイルだけを配置します。ネットワーク接続と、準備中の一時ファイルを含めて2GB程度の空き容量が必要です。
-4. `PecaOneRelay.exe` を起動します。
-5. 「ペアリングQRを作成」を押し、スマホアプリ「ぺかわん」で読み取ります。チャンネルはスマホ側で選択してください。
-
-.NET ランタイムは同梱しています。FFmpeg は公開ZIPに含まれていません。初回の準備が完了した後は、FFmpegを毎回取得する必要はありません。
-
-## スクリプトを実行できない場合の手動導入
-
-1. [BtbN/FFmpeg-Builds の latest リリース](https://github.com/BtbN/FFmpeg-Builds/releases/tag/latest)を開き、`ffmpeg-n9.0-latest-win64-gpl-9.0.zip` を取得します。
-2. アーカイブを展開し、その中の `bin/ffmpeg.exe` と `bin/ffprobe.exe`、ルートの `LICENSE.txt` を、アプリの展開先に作った `ffmpeg` フォルダへコピーします。
 3. `PecaOneRelay.exe` を起動します。
+4. 「ペアリングQRを作成」を押し、スマホアプリ「ぺかわん」で読み取ります。チャンネルはスマホ側で選択してください。
+
+.NET ランタイムとFFmpegは同梱しています。別途取得したり、PowerShellのスクリプトを実行したりする必要はありません。展開したファイルはフォルダごと保持してください。
+
+## ダウンロードするファイル
+
+`PecaOneConnect-v1.0.0-portable-win-x64.zip` が同梱版です。以前の `PecaOneConnect-v1.0.0-win-x64.zip` はFFmpegを別途取得する構成のため、初めて使う場合は同梱版を選んでください。
+
+同じリリースにあるソースコードのZIPは開発・改変用です。通常の利用では取得する必要はありません。
 
 ## 接続できない場合
 
@@ -25,6 +24,6 @@ Windows 10 22H2 以降または Windows 11 の64ビット版に対応してい�
 
 ## 配布ファイルの確認
 
-公開元は [valai/peercast_encoder_for_pecaone の Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases)です。`SHA256SUMS.txt` と、PowerShell の `Get-FileHash ./PecaOneConnect-v1.0.0-win-x64.zip -Algorithm SHA256` の結果を比較できます。
+公開元は [valai/peercast_encoder_for_pecaone の Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases)です。`SHA256SUMS-portable.txt` と、PowerShell の `Get-FileHash ./PecaOneConnect-v1.0.0-portable-win-x64.zip -Algorithm SHA256` の結果を比較できます。
 
 この版にはコード署名を付けていません。取得先とチェックサムを確認してください。Windowsのセキュリティ機能を無効にする必要はありません。
