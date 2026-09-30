@@ -76,7 +76,7 @@ internal sealed class SessionManager : IAsyncDisposable
             var token = session.Cancellation.Token;
             var source = await _peerCast.StreamUriAsync(session.ChannelId, session.Tracker, token);
             var (video, audio) = await Transcoder.ProbeAsync(source, token);
-            if (!video) throw new InvalidOperationException("映像のある FLV 番組だけ変換できます");
+            if (!video) throw new InvalidOperationException("映像のある FLV チャンネルだけ変換できます");
             token.ThrowIfCancellationRequested();
             var transcoder = new Transcoder();
             lock (_gate)

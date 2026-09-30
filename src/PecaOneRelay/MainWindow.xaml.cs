@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly RelayServer _server;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(5) };
     private readonly Forms.NotifyIcon _tray;
+    private readonly System.Drawing.Icon _trayIcon;
     private bool _exiting;
     private bool _refreshing;
 
@@ -28,10 +29,16 @@ public partial class MainWindow : Window
         _server = server;
         PeerUrl.Text = settings.PeerCastUrl;
         ListenPort.Text = settings.ListenPort.ToString();
+        using (var iconStream = System.Windows.Application.GetResourceStream(
+            new Uri("pack://application:,,,/Assets/PecaOne_AppIcon.ico")).Stream)
+        using (var icon = new System.Drawing.Icon(iconStream, new System.Drawing.Size(32, 32)))
+        {
+            _trayIcon = (System.Drawing.Icon)icon.Clone();
+        }
         _tray = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
-            Text = "ぺかわん Windows リレー",
+            Icon = _trayIcon,
+            Text = "ぺかわん コネクト",
             Visible = true,
             ContextMenuStrip = new Forms.ContextMenuStrip()
         };
@@ -72,20 +79,43 @@ public partial class MainWindow : Window
             await _sessions.ExpireIdleAsync();
             var status = await _sessions.ViewAsync(_server.BaseUrl);
             VpnStatus.Text = _server.BaseUrl is null
-                ? (_server.Error ?? "Tailscale を待っています")
-                : "VPN配信: " + _server.BaseUrl;
-            PeerStatus.Text = "PeerCastStation: " + status.RelayMessage;
+                ? (_server.Error is null
+                    ? "スマホとの接続を準備しています"
+                    : "スマホから接続できません。Tailscale の接続状態と設定を確認してください。")
+                : "スマホから接続できる状態です";
+            PeerStatus.Text = !status.PeerCastOnline
+                ? "PeerCastStation に接続できません。起動状態と設定を確認してください。"
+                : status.RelayReachable
+                    ? $"PeerCastStation に接続しています。ほかの視聴者へリレーできます（リレー先: {status.DownstreamRelays} 件）"
+                    : "PeerCastStation に接続しています。ほかの視聴者へのリレー設定を確認してください。";
             SessionStatus.Text = status.SessionId is null
-                ? "スマホからの番組要求を待っています"
-                : $"番組 {status.ChannelId} / 変換: {status.State}";
-            SessionError.Text = status.Error ?? "";
-            PairStatus.Text = _settings.HasPairedDevice ? "スマホ1台が登録されています" : "登録済みスマホはありません";
+                ? "「ぺかわん」からのチャンネルリクエストを待っています"
+                : status.State switch
+                {
+                    "starting" => "「ぺかわん」での視聴を準備しています",
+                    "ready" => "「ぺかわん」へチャンネルを配信しています",
+                    "failed" => "チャンネルを配信できませんでした",
+                    _ => "チャンネルの状態を確認しています"
+                };
+            SessionError.Text = status.State == "failed"
+                ? "「ぺかわん」からチャンネルを選び直してください。改善しない場合は、PeerCastStation の接続状態を確認してください。"
+                : "";
+            PairStatus.Text = _settings.HasPairedDevice
+                ? "「ぺかわん」とペアリング済みです"
+                : "「ぺかわん」とのペアリングが必要です";
             StopButton.IsEnabled = status.SessionId is not null;
-            _tray.Text = (status.State == "ready" ? "配信中" : "待機中") + " - ぺかわんリレー";
+            var trayStatus = status.State switch
+            {
+                "starting" => "視聴準備中",
+                "ready" => "配信中",
+                "failed" => "配信エラー",
+                _ => "待機中"
+            };
+            _tray.Text = trayStatus + " - ぺかわん コネクト";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            VpnStatus.Text = "状態を確認できません: " + ex.Message;
+            VpnStatus.Text = "接続状態を確認できません。「状態を更新」を押して、もう一度お試しください。";
         }
         finally { _refreshing = false; }
     }
@@ -95,7 +125,7 @@ public partial class MainWindow : Window
         var payload = _server.NewPairPayload();
         if (payload is null)
         {
-            PairExpires.Text = "Tailscale の接続後に作成できます";
+            PairExpires.Text = "Tailscale を接続してから、ペアリングQRを作成してください。";
             return;
         }
         using var generator = new QRCodeGenerator();
@@ -118,7 +148,7 @@ public partial class MainWindow : Window
         _settings.Revoke();
         await _sessions.StopAsync();
         PairQr.Source = null;
-        PairExpires.Text = "登録端末を解除しました";
+        PairExpires.Text = "「ぺかわん」とのペアリングを解除しました";
         await RefreshAsync();
     }
 
@@ -140,7 +170,10 @@ public partial class MainWindow : Window
             SettingsMessage.Text = "設定を保存しました";
             await RefreshAsync();
         }
-        catch (Exception ex) { SettingsMessage.Text = ex.Message; }
+        catch (Exception)
+        {
+            SettingsMessage.Text = "設定を保存できませんでした。PeerCastStation の接続先とスマホとの接続ポートを確認してください。";
+        }
     }
 
     private async Task ExitAsync()
@@ -153,6 +186,7 @@ public partial class MainWindow : Window
         _peerCast.Dispose();
         _tray.Visible = false;
         _tray.Dispose();
+        _trayIcon.Dispose();
         System.Windows.Application.Current.Shutdown();
     }
 }

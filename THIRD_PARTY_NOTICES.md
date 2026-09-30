@@ -2,20 +2,51 @@
 
 ## FFmpeg
 
-The Windows package includes `ffmpeg.exe` and `ffprobe.exe` from the BtbN FFmpeg Builds GPL static Windows x64 release, FFmpeg **n9.0.2**, build tag `autobuild-2026-09-19-13-11`.
+The recommended `PecaOneConnect-v1.0.0-portable-r2-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe under `app/ffmpeg/`, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files. Paths below are relative to this notice inside `app/`.
 
-- Binary archive: https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-19-13-11/ffmpeg-n9.0.2-win64-gpl-9.0.zip
-- Archive SHA-256: `44083538105B4E64D439F9E67BD875BD264B4271239C808B2ACEA09773AD1AA3`
-- Corresponding FFmpeg source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
-- Build scripts and third-party component recipes: https://github.com/BtbN/FFmpeg-Builds/tree/3e6685e
-- License text shipped in `ffmpeg/LICENSE.txt`; FFmpeg licensing information: https://ffmpeg.org/legal.html
+The complete corresponding-source package, **FFmpeg-9.0.2-x264-source.zip**, is available from the same release:
 
-FFmpeg and the bundled encoders are separate programs invoked by this application. Keep their license, source references, and build information with every redistributed binary package. Before public redistribution, provide the complete corresponding source for the exact binaries and their included third-party libraries through the same distribution channel.
+https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0
+
+It includes the two source archives used to build the executables, the unmodified build script and source pins, the configuration, compiler/package versions, source checksums, and license texts. The source need not be downloaded for normal application use.
+
+- FFmpeg source: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+- FFmpeg source SHA-256: `8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e`
+- FFmpeg's release signature was verified with fingerprint `FCF986EA15E6E293A5644F10B4322F04D67658D8`.
+- x264 source: https://code.videolan.org/videolan/x264/-/tree/0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee
+- Source/build details: `ffmpeg/BUILDINFO.txt`, `ffmpeg/README.md`, and the source ZIP.
+- Complete FFmpeg license text: `ffmpeg/LICENSE.txt` and `ffmpeg/licenses/`.
+- x264 license: `ffmpeg/licenses/x264-COPYING.txt`.
+- MinGW/GCC copyright and runtime notices: `ffmpeg/licenses/*copyright.txt`.
+- FFmpeg licensing information: https://ffmpeg.org/legal.html
+
+The only external codec library is x264; no other third-party codec/rendering/device libraries are compiled in. The unmodified MinGW toolchain uses the Win32 thread model. The executables are statically linked and import only Windows system DLLs. There are no source patches. FFmpeg is a separate process invoked by the application.
+
+The earlier `PecaOneConnect-v1.0.0-win-x64.zip` is retained for existing users. It excludes FFmpeg and has an optional setup script which downloads it directly from BtbN/FFmpeg-Builds. Development-only builds may also use that provider; they are not the binaries shipped in the portable package.
 
 ## QRCoder
 
-QRCoder 1.8.0 is used to render the local pairing QR code. Project and license: https://github.com/Shane32/QRCoder
+QRCoder 1.8.0 is used to render the local pairing QR code. Its complete MIT license and copyright notices are included in `licenses/QRCoder-LICENSE.txt`.
+
+- Project: https://github.com/Shane32/QRCoder
+- Source commit recorded in the NuGet package: `443d5a1f76debf203b1e252efee6996a15d41f5c`
+- Source: https://github.com/Shane32/QRCoder/tree/443d5a1f76debf203b1e252efee6996a15d41f5c
+- `QRCoder-1.8.0-source.zip` is attached to the v1.0.0 release.
+
+## .NET 10.0.12
+
+The Windows ZIP includes the .NET, ASP.NET Core, and Windows Desktop runtimes. Their license texts and available third-party notices are supplied in `licenses/NET-Runtime-LICENSE.txt`, `licenses/NET-Runtime-THIRD-PARTY-NOTICES.txt`, `licenses/ASP-NET-Core-LICENSE.txt`, `licenses/ASP-NET-Core-THIRD-PARTY-NOTICES.txt`, and `licenses/Windows-Desktop-LICENSE.txt`.
+
+Projects: https://github.com/dotnet/runtime, https://github.com/dotnet/aspnetcore, https://github.com/dotnet/wpf
 
 ## PeerCastStation
 
 PeerCastStation is installed separately and is not included in this application's package. Project and license: https://github.com/kumaryu/peercaststation
+
+Tailscale is also installed separately: https://tailscale.com/download
+
+The application itself is GPL-3.0-or-later (`LICENSE`). Its exact source is provided in the same release as the public Windows ZIP.
+
+## Native launcher
+
+The root `ぺかわん コネクト.exe` launcher is GPL-3.0-or-later. Copyright (c) 2026 PecaOne Connect contributors. The complete license is in `LICENSE`. Its corresponding source and build/packaging scripts are supplied in **PecaOneConnect-v1.0.0-launcher-source.zip** at the same v1.0.0 release URL above. The archive includes `native/launcher/`, `scripts/Build-Launcher.ps1`, and `scripts/Build-PortableLayout.ps1`; `LAUNCHER-BUILDINFO.txt` identifies the exact source commit and compiler version. It imports only Windows system DLLs and starts the unchanged application under `app/`.

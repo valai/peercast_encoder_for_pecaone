@@ -67,9 +67,9 @@ internal sealed class Transcoder : IAsyncDisposable
     internal static IReadOnlyList<string> BuildArguments(Uri source, string outputDirectory, bool hasAudio)
     {
         var filters = "[0:v:0]split=3[vh][vm][vl];" +
-            "[vh]scale=w='min(iw,1280)':h='min(ih,720)':force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[h];" +
+            "[vh]scale=w='min(iw,1920)':h='min(ih,1080)':force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[h];" +
             "[vm]scale=w='min(iw,854)':h='min(ih,480)':force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[m];" +
-            "[vl]scale=w='min(iw,640)':h='min(ih,360)':force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[l]";
+            "[vl]scale=w='min(iw,426)':h='min(ih,240)':force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p[l]";
         var args = new List<string>
         {
             "-nostdin", "-hide_banner", "-loglevel", "error", "-rw_timeout", "15000000",
@@ -81,7 +81,7 @@ internal sealed class Transcoder : IAsyncDisposable
             if (hasAudio) args.AddRange(["-map", "0:a:0"]);
         }
         args.AddRange(["-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-            "-b:v:0", "2500k", "-maxrate:v:0", "2500k", "-bufsize:v:0", "5000k",
+            "-b:v:0", "5000k", "-maxrate:v:0", "5000k", "-bufsize:v:0", "10000k",
             "-b:v:1", "1200k", "-maxrate:v:1", "1200k", "-bufsize:v:1", "2400k",
             "-b:v:2", "500k", "-maxrate:v:2", "500k", "-bufsize:v:2", "1000k",
             "-force_key_frames:v:0", "expr:gte(t,n_forced*3)",

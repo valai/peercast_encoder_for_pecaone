@@ -1,0 +1,101 @@
+name: Publish portable v1.0.0 icon revision
+
+on:
+  push:
+    branches: [codex/change-paring-label]
+    paths:
+      - .github/workflows/layout-release.yml
+      - assets/**
+      - src/PecaOneRelay/**
+      - native/launcher/**
+      - scripts/Build-Launcher.ps1
+      - scripts/Build-PortableLayout.ps1
+      - scripts/Test-Launcher.ps1
+      - scripts/Test-PortableLayout.ps1
+      - docs/RELEASE-v1.0.0.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portable-layout-v1.0.0
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.401
+      - name: Build and test the native launcher
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            ./scripts/Build-Launcher.ps1
+            ./scripts/Test-Launcher.ps1
+          } catch {
+            $message = $_.ToString().Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error::$message"
+            throw
+          }
+      - name: Rebuild the application, package icons and test startup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            New-Item -ItemType Directory -Path publish -Force | Out-Null
+            Invoke-WebRequest -Uri 'https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/PecaOneConnect-v1.0.0-portable-win-x64.zip' -OutFile publish/PecaOneConnect-v1.0.0-portable-win-x64.zip -TimeoutSec 180
+            if ((Get-FileHash -LiteralPath publish/PecaOneConnect-v1.0.0-portable-win-x64.zip -Algorithm SHA256).Hash -ne '6e2e78e3acdecc193828cf80b3b47ade3d8ae7976f032ecc46833a32b70d71ec') { throw 'The published portable archive does not match its checksum.' }
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $PWD 'publish/PecaOneConnect-v1.0.0-portable-win-x64.zip'), (Join-Path $PWD 'artifacts/original-app'))
+            $env:PECAONE_FFMPEG_DIR = Join-Path $PWD 'artifacts/original-app/ffmpeg'
+            dotnet restore PecaOneRelay.slnx --configfile NuGet.Config
+            if ($LASTEXITCODE -ne 0) { throw 'Test restore failed.' }
+            dotnet test PecaOneRelay.slnx -c Release --no-restore
+            if ($LASTEXITCODE -ne 0) { throw 'Application tests failed.' }
+            dotnet restore src/PecaOneRelay/PecaOneRelay.csproj -r win-x64 --configfile NuGet.Config
+            if ($LASTEXITCODE -ne 0) { throw 'Publish restore failed.' }
+            dotnet publish src/PecaOneRelay/PecaOneRelay.csproj -c Release -r win-x64 --self-contained true --no-restore -p:IncludeFfmpeg=false -o artifacts/updated-app
+            if ($LASTEXITCODE -ne 0) { throw 'Application publish failed.' }
+            ./scripts/Build-PortableLayout.ps1 -UpdatedAppDirectory artifacts/updated-app
+            ./scripts/Test-PortableLayout.ps1 -Archive publish/PecaOneConnect-v1.0.0-portable-r3-win-x64.zip -UpdatedAppDirectory artifacts/updated-app -LaunchApp
+            git -c core.autocrlf=false archive --format=zip --prefix=PecaOneConnect-v1.0.0-r3-source/ --output=publish/PecaOneConnect-v1.0.0-r3-source.zip HEAD
+            if ($LASTEXITCODE -ne 0) { throw 'Application and launcher source archive creation failed.' }
+            $files = @('PecaOneConnect-v1.0.0-portable-r3-win-x64.zip', 'PecaOneConnect-v1.0.0-r3-source.zip')
+            $checksums = foreach ($file in $files) {
+              (Get-FileHash -LiteralPath (Join-Path publish $file) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $file
+            }
+            $checksums | Set-Content -LiteralPath publish/SHA256SUMS-r3.txt -Encoding ascii
+          } catch {
+            $message = $_.ToString().Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error::$message"
+            throw
+          }
+      - name: Publish source then the organized package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = '${{ github.repository }}'
+          gh release upload v1.0.0 publish/PecaOneConnect-v1.0.0-r3-source.zip --repo $repo --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Updated source upload failed.' }
+          gh release upload v1.0.0 publish/PecaOneConnect-v1.0.0-portable-r3-win-x64.zip publish/SHA256SUMS-r3.txt --repo $repo --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Icon revision upload failed.' }
+          $release = gh api "repos/$repo/releases/tags/v1.0.0" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $release.draft) { throw 'Release verification failed.' }
+          foreach ($name in @('PecaOneConnect-v1.0.0-portable-r3-win-x64.zip', 'PecaOneConnect-v1.0.0-r3-source.zip', 'SHA256SUMS-r3.txt')) {
+            $file = Get-Item -LiteralPath (Join-Path publish $name)
+            $asset = @($release.assets | Where-Object { $_.name -eq $name })
+            if ($asset.Count -ne 1 -or $asset[0].size -ne $file.Length) { throw ('Uploaded asset size mismatch: ' + $name) }
+            $digest = 'sha256:' + (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($asset[0].digest -and $asset[0].digest -ne $digest) { throw ('Uploaded asset digest mismatch: ' + $name) }
+          }
+          gh release edit v1.0.0 --repo $repo --notes-file docs/RELEASE-v1.0.0.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release notes update failed.' }

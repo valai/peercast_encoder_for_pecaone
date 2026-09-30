@@ -1,0 +1,2 @@
+scripts/ffmpeg/*.sh text eol=lf
+scripts/ffmpeg/*.env text eol=lf
