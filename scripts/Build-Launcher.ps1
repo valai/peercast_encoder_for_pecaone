@@ -26,12 +26,13 @@ Push-Location $source
 try {
     Invoke-BuildTool 'rc.exe' @('/nologo', '/fo', (Join-Path $OutputDirectory 'launcher.res'), 'launcher.rc')
     Invoke-BuildTool 'cl.exe' @('/nologo', '/O2', '/Oi', '/utf-8', '/W4', '/WX', '/GS', '/Zl', '/TC', '/c', 'launcher.c', ('/Fo' + (Join-Path $OutputDirectory 'launcher.obj')))
+    Invoke-BuildTool 'cl.exe' @('/nologo', '/O2', '/Oi', '/utf-8', '/W4', '/WX', '/GS', '/Zl', '/TC', '/c', 'runtime.c', ('/Fo' + (Join-Path $OutputDirectory 'runtime.obj')))
     $linkArguments = @('/nologo', '/NODEFAULTLIB', '/ENTRY:LauncherEntry', '/SUBSYSTEM:WINDOWS', '/MACHINE:X64', '/DYNAMICBASE', '/NXCOMPAT', '/MANIFEST:NO',
-        ('/OUT:' + (Join-Path $OutputDirectory 'PecaOneConnect.exe')), (Join-Path $OutputDirectory 'launcher.obj'), (Join-Path $OutputDirectory 'launcher.res'), 'kernel32.lib', 'user32.lib')
+        ('/OUT:' + (Join-Path $OutputDirectory 'PecaOneConnect.exe')), (Join-Path $OutputDirectory 'launcher.obj'), (Join-Path $OutputDirectory 'runtime.obj'), (Join-Path $OutputDirectory 'launcher.res'), 'kernel32.lib', 'user32.lib')
     Invoke-BuildTool 'link.exe' $linkArguments
     Invoke-BuildTool 'cl.exe' @('/nologo', '/O2', '/Oi', '/utf-8', '/W4', '/WX', '/GS', '/Zl', '/TC', '/c', 'test-child.c', ('/Fo' + (Join-Path $OutputDirectory 'test-child.obj')))
     $linkArguments = @('/nologo', '/NODEFAULTLIB', '/ENTRY:TestChildEntry', '/SUBSYSTEM:WINDOWS', '/MACHINE:X64', '/DYNAMICBASE', '/NXCOMPAT', '/MANIFEST:NO',
-        ('/OUT:' + (Join-Path $OutputDirectory 'TestChild.exe')), (Join-Path $OutputDirectory 'test-child.obj'), 'kernel32.lib')
+        ('/OUT:' + (Join-Path $OutputDirectory 'TestChild.exe')), (Join-Path $OutputDirectory 'test-child.obj'), (Join-Path $OutputDirectory 'runtime.obj'), 'kernel32.lib')
     Invoke-BuildTool 'link.exe' $linkArguments
     $imports = & dumpbin.exe /nologo /imports (Join-Path $OutputDirectory 'PecaOneConnect.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Launcher import inspection failed.' }
