@@ -4,6 +4,7 @@
     <OutputType>WinExe</OutputType>
     <Product>ぺかわん コネクト</Product>
     <AssemblyTitle>ぺかわん コネクト</AssemblyTitle>
+    <ApplicationIcon>..\..\assets\PecaOne_AppIcon.ico</ApplicationIcon>
     <Version>1.0.0</Version>
     <RuntimeFrameworkVersion>10.0.12</RuntimeFrameworkVersion>
     <IncludeFfmpeg Condition="'$(IncludeFfmpeg)' == ''">true</IncludeFfmpeg>
@@ -16,6 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="..\..\assets\PecaOne_AppIcon.ico" Link="Assets\PecaOne_AppIcon.ico" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="QRCoder" Version="1.8.0" />
   </ItemGroup>

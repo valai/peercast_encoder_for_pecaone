@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly RelayServer _server;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(5) };
     private readonly Forms.NotifyIcon _tray;
+    private readonly System.Drawing.Icon _trayIcon;
     private bool _exiting;
     private bool _refreshing;
 
@@ -28,9 +29,15 @@ public partial class MainWindow : Window
         _server = server;
         PeerUrl.Text = settings.PeerCastUrl;
         ListenPort.Text = settings.ListenPort.ToString();
+        using (var iconStream = System.Windows.Application.GetResourceStream(
+            new Uri("pack://application:,,,/Assets/PecaOne_AppIcon.ico")).Stream)
+        using (var icon = new System.Drawing.Icon(iconStream, new System.Drawing.Size(32, 32)))
+        {
+            _trayIcon = (System.Drawing.Icon)icon.Clone();
+        }
         _tray = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = _trayIcon,
             Text = "ぺかわん コネクト",
             Visible = true,
             ContextMenuStrip = new Forms.ContextMenuStrip()
@@ -179,6 +186,7 @@ public partial class MainWindow : Window
         _peerCast.Dispose();
         _tray.Visible = false;
         _tray.Dispose();
+        _trayIcon.Dispose();
         System.Windows.Application.Current.Shutdown();
     }
 }

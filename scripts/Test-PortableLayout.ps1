@@ -1,6 +1,7 @@
 param(
     [string]$Archive = (Join-Path $PSScriptRoot '..\publish\PecaOneConnect-v1.0.0-portable-r2-win-x64.zip'),
     [string]$OriginalArchive = (Join-Path $PSScriptRoot '..\publish\PecaOneConnect-v1.0.0-portable-win-x64.zip'),
+    [string]$UpdatedAppDirectory,
     [switch]$LaunchApp
 )
 $ErrorActionPreference = 'Stop'
@@ -14,10 +15,15 @@ $original = [IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($OriginalA
 $count = 0
 try {
     foreach ($entry in $original.Entries | Where-Object { $_.FullName -match '\.(exe|dll)$' }) {
+        $file = Join-Path (Join-Path $validation 'app') $entry.FullName
+        if ($UpdatedAppDirectory -and $entry.FullName -in @('PecaOneRelay.exe', 'PecaOneRelay.dll')) {
+            $expected = (Get-FileHash -LiteralPath (Join-Path $UpdatedAppDirectory $entry.FullName) -Algorithm SHA256).Hash
+            if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('Updated application file mismatch: ' + $entry.FullName) }
+            continue
+        }
         $stream = $entry.Open()
         $sha = [Security.Cryptography.SHA256]::Create()
         try { $expected = [Convert]::ToHexString($sha.ComputeHash($stream)) } finally { $stream.Dispose(); $sha.Dispose() }
-        $file = Join-Path (Join-Path $validation 'app') $entry.FullName
         if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('A published application binary changed: ' + $entry.FullName) }
         $count++
     }
@@ -29,7 +35,31 @@ foreach ($file in @('LICENSE', 'THIRD_PARTY_NOTICES.md', 'FIRST_RUN.md', 'LAUNCH
 }
 $version = & (Join-Path $validation 'app\ffmpeg\ffmpeg.exe') -version
 if ($LASTEXITCODE -ne 0 -or $version[0] -notmatch '^ffmpeg version 9\.0\.2') { throw 'The relocated FFmpeg did not run.' }
-Write-Output ('Layout and FFmpeg checks passed; ' + $count + ' original EXE/DLL files are unchanged.')
+Write-Output ('Layout and FFmpeg checks passed; ' + $count + ' original EXE/DLL dependencies are unchanged.')
+if ($UpdatedAppDirectory) {
+    foreach ($file in @('PecaOneRelay.pdb', 'PecaOneRelay.deps.json', 'PecaOneRelay.runtimeconfig.json')) {
+        if ((Get-FileHash -LiteralPath (Join-Path $validation ('app\' + $file)) -Algorithm SHA256).Hash -ne
+            (Get-FileHash -LiteralPath (Join-Path $UpdatedAppDirectory $file) -Algorithm SHA256).Hash) { throw ('Updated application file mismatch: ' + $file) }
+    }
+    Add-Type -AssemblyName System.Drawing
+    $expectedIcon = [Drawing.Icon]::new((Join-Path $repo 'assets\PecaOne_AppIcon.ico'), [Drawing.Size]::new(32, 32))
+    $expectedBitmap = $expectedIcon.ToBitmap()
+    try {
+        foreach ($executable in @('ぺかわん コネクト.exe', 'app\PecaOneRelay.exe')) {
+            $actualIcon = [Drawing.Icon]::ExtractAssociatedIcon((Join-Path $validation $executable))
+            $actualBitmap = $actualIcon.ToBitmap()
+            try {
+                if ($actualBitmap.Size -ne $expectedBitmap.Size) { throw ('Executable icon size mismatch: ' + $executable) }
+                for ($y = 0; $y -lt $expectedBitmap.Height; $y++) {
+                    for ($x = 0; $x -lt $expectedBitmap.Width; $x++) {
+                        if ($actualBitmap.GetPixel($x, $y) -ne $expectedBitmap.GetPixel($x, $y)) { throw ('Executable icon mismatch: ' + $executable) }
+                    }
+                }
+                Write-Output ('App icon verified: ' + $executable)
+            } finally { $actualBitmap.Dispose(); $actualIcon.Dispose() }
+        }
+    } finally { $expectedBitmap.Dispose(); $expectedIcon.Dispose() }
+}
 if ($LaunchApp) {
     $child = $null
     try {
