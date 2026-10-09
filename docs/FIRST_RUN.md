@@ -2,6 +2,8 @@
 
 Windows 10 22H2 以降または Windows 11 の64ビット版に対応しています。
 
+[はじめての接続ガイド（PDF）](PecaOneConnect-v1.0.0-quick-start-ja.pdf)では、ZIP展開からTailscaleの導入・接続、スマホとのペアリング、視聴開始までを2ページで説明しています。[GitHubリリースからPDFをダウンロード](https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/PecaOneConnect-v1.0.0-quick-start-ja.pdf)することもできます。
+
 1. ZIPを右クリックして「すべて展開」を選び、書き込み可能なフォルダへ展開します。
 2. PeerCastStation と Tailscale を別途インストールします。PCとスマホを同じ Tailscale ネットワークへ接続してください。
 3. 展開直下の `ぺかわん コネクト.exe` を起動します。

@@ -7,7 +7,7 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 ## 前提
 
 - Windows 10 22H2 以降または Windows 11、x64。
-- PeerCastStation 6.0.1。ローカル管理 API が使えること。PeerCast 網へのリレーには同アプリの外部ポート開放が必要です。
+- PeerCastStation。ローカル管理 API が使えること。PeerCast 網へのリレーには同アプリの外部ポート開放が必要です。
 - Windows PC とスマホが同じ Tailscale ネットワークに参加していること。HLS 用 TCP 17444 は Tailscale 上で Windows ファイアウォールに許可してください。公開インターネットへ転送しないでください。
 - 公開する同梱版にはFFmpeg 9.0.2が含まれています。開発時は `scripts/prepare-ffmpeg.ps1` で準備できます。
 
@@ -19,7 +19,9 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 
 展開直下には `ぺかわん コネクト.exe`、`はじめに.txt`、`app/` の3つだけを置き、アプリ本体・DLL・FFmpeg・ライセンスは `app/` にまとめています。移動するときはフォルダ全体を移動してください。デスクトップにはEXEのショートカットを作成できます。
 
-導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。`SHA256SUMS-r3.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
+導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。[はじめての接続ガイド（PDF）](docs/PecaOneConnect-v1.0.0-quick-start-ja.pdf)では、ZIP展開、PeerCastStationの準備、PCとスマホへのTailscale導入、QRペアリング、視聴開始までを2ページにまとめています。PDFは同じGitHubリリースのアセットからも取得できます。
+
+`SHA256SUMS-r3.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
 
 ## 開発環境から起動
 
