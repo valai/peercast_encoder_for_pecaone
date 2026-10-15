@@ -41,6 +41,7 @@
                     <TextBox x:Name="PeerUrl" Padding="7"/>
                     <TextBlock Text="スマホとの接続ポート" Margin="0,10,0,3"/>
                     <TextBox x:Name="ListenPort" Width="100" HorizontalAlignment="Left" Padding="7"/>
+                    <CheckBox x:Name="StartAtLogin" Content="Windows へのサインイン時に起動する" Margin="0,14,0,0"/>
                     <Button Content="設定を保存" Padding="12,7" HorizontalAlignment="Left" Margin="0,12,0,0" Click="Save_Click"/>
                     <TextBlock x:Name="SettingsMessage" Foreground="#4A5C70" Margin="0,7,0,0" TextWrapping="Wrap"/>
                 </StackPanel>

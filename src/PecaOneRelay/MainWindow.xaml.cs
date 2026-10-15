@@ -29,6 +29,7 @@ public partial class MainWindow : Window
         _server = server;
         PeerUrl.Text = settings.PeerCastUrl;
         ListenPort.Text = settings.ListenPort.ToString();
+        StartAtLogin.IsChecked = StartupRegistration.IsEnabled;
         using (var iconStream = System.Windows.Application.GetResourceStream(
             new Uri("pack://application:,,,/Assets/PecaOne_AppIcon.ico")).Stream)
         using (var icon = new System.Drawing.Icon(iconStream, new System.Drawing.Size(32, 32)))
@@ -167,13 +168,24 @@ public partial class MainWindow : Window
             _settings.UpdatePeerCast(PeerUrl.Text, int.Parse(ListenPort.Text));
             await _sessions.StopAsync();
             await _server.EnsureBoundAsync();
-            SettingsMessage.Text = "設定を保存しました";
-            await RefreshAsync();
         }
         catch (Exception)
         {
             SettingsMessage.Text = "設定を保存できませんでした。PeerCastStation の接続先とスマホとの接続ポートを確認してください。";
+            return;
         }
+
+        try
+        {
+            StartupRegistration.SetEnabled(StartAtLogin.IsChecked == true);
+            SettingsMessage.Text = "設定を保存しました";
+        }
+        catch (Exception)
+        {
+            SettingsMessage.Text = "接続設定は保存しましたが、Windows へのサインイン時の起動設定を保存できませんでした。";
+        }
+
+        await RefreshAsync();
     }
 
     private async Task ExitAsync()
