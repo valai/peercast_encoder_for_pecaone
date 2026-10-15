@@ -16,4 +16,4 @@ Windows へのサインイン時に起動する場合は、アプリの「接続
 ライセンスとソースコードの取得先は app\LICENSE と app\THIRD_PARTY_NOTICES.md にあります。
 
 公式ダウンロード：
-https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0
+https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.1.0

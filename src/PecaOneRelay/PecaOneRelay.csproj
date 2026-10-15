@@ -5,7 +5,7 @@
     <Product>ぺかわん コネクト</Product>
     <AssemblyTitle>ぺかわん コネクト</AssemblyTitle>
     <ApplicationIcon>..\..\assets\PecaOne_AppIcon.ico</ApplicationIcon>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <RuntimeFrameworkVersion>10.0.12</RuntimeFrameworkVersion>
     <IncludeFfmpeg Condition="'$(IncludeFfmpeg)' == ''">true</IncludeFfmpeg>
     <TargetFramework>net10.0-windows</TargetFramework>
