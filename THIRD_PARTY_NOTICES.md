@@ -2,11 +2,11 @@
 
 ## FFmpeg
 
-The recommended `PecaOneConnect-v1.0.0-portable-r2-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe under `app/ffmpeg/`, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files. Paths below are relative to this notice inside `app/`.
+The recommended `PecaOneConnect-v1.1.0-portable-win-x64.zip` includes FFmpeg 9.0.2 and ffprobe under `app/ffmpeg/`, built by this repository from the exact sources below. The FFmpeg binaries are GPL-3.0-or-later (`--enable-gpl --enable-version3`) and include x264, which is GPL-2.0-or-later. FFmpeg copyright: the FFmpeg developers. x264 copyright notices and authors are retained in the supplied source files. Paths below are relative to this notice inside `app/`.
 
 The complete corresponding-source package, **FFmpeg-9.0.2-x264-source.zip**, is available from the same release:
 
-https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0
+https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.1.0
 
 It includes the two source archives used to build the executables, the unmodified build script and source pins, the configuration, compiler/package versions, source checksums, and license texts. The source need not be downloaded for normal application use.
 
@@ -31,7 +31,7 @@ QRCoder 1.8.0 is used to render the local pairing QR code. Its complete MIT lice
 - Project: https://github.com/Shane32/QRCoder
 - Source commit recorded in the NuGet package: `443d5a1f76debf203b1e252efee6996a15d41f5c`
 - Source: https://github.com/Shane32/QRCoder/tree/443d5a1f76debf203b1e252efee6996a15d41f5c
-- `QRCoder-1.8.0-source.zip` is attached to the v1.0.0 release.
+- `QRCoder-1.8.0-source.zip` is attached to the v1.1.0 release.
 
 ## .NET 10.0.12
 
@@ -49,4 +49,4 @@ The application itself is GPL-3.0-or-later (`LICENSE`). Its exact source is prov
 
 ## Native launcher
 
-The root `ぺかわん コネクト.exe` launcher is GPL-3.0-or-later. Copyright (c) 2026 PecaOne Connect contributors. The complete license is in `LICENSE`. Its corresponding source and build/packaging scripts are supplied in **PecaOneConnect-v1.0.0-launcher-source.zip** at the same v1.0.0 release URL above. The archive includes `native/launcher/`, `scripts/Build-Launcher.ps1`, and `scripts/Build-PortableLayout.ps1`; `LAUNCHER-BUILDINFO.txt` identifies the exact source commit and compiler version. It imports only Windows system DLLs and starts the unchanged application under `app/`.
+The root `ぺかわん コネクト.exe` launcher is GPL-3.0-or-later. Copyright (c) 2026 PecaOne Connect contributors. The complete license is in `LICENSE`. Its corresponding source and build/packaging scripts are supplied in **PecaOneConnect-v1.1.0-source.zip** at the same v1.1.0 release URL above. The archive includes `native/launcher/`, `scripts/Build-Launcher.ps1`, and `scripts/Build-PortableRelease.ps1`; `LAUNCHER-BUILDINFO.txt` identifies the exact source commit and compiler version. It imports only Windows system DLLs and starts the application under `app/`.

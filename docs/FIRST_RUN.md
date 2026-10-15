@@ -15,7 +15,7 @@ Windows へのサインイン時に起動する設定は、アプリの「接続
 
 ## ダウンロードするファイル
 
-`PecaOneConnect-v1.0.0-portable-r3-win-x64.zip` が現在の推奨する同梱版です。r3ではアプリアイコンを更新しています。以前の同梱版やFFmpeg別取得版は既存の配布物として保持しています。初めて使う場合は `portable-r3` を選んでください。
+`PecaOneConnect-v1.1.0-portable-win-x64.zip` が現在の推奨する同梱版です。Windowsへのサインイン時にアプリを起動する設定を追加しました。初期状態はオフです。以前の同梱版やFFmpeg別取得版は既存の配布物として保持しています。
 
 同じリリースにあるソースコードのZIPは開発・改変用です。通常の利用では取得する必要はありません。
 
@@ -28,6 +28,6 @@ Windows へのサインイン時に起動する設定は、アプリの「接続
 
 ## 配布ファイルの確認
 
-公開元は [valai/peercast_encoder_for_pecaone の Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases)です。`SHA256SUMS-r3.txt` と、PowerShell の `Get-FileHash ./PecaOneConnect-v1.0.0-portable-r3-win-x64.zip -Algorithm SHA256` の結果を比較できます。
+公開元は [valai/peercast_encoder_for_pecaone の v1.1.0 Release](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.1.0)です。`SHA256SUMS.txt` と、PowerShell の `Get-FileHash ./PecaOneConnect-v1.1.0-portable-win-x64.zip -Algorithm SHA256` の結果を比較できます。
 
 この版にはコード署名を付けていません。取得先とチェックサムを確認してください。Windowsのセキュリティ機能を無効にする必要はありません。

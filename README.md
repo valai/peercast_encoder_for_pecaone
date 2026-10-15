@@ -15,15 +15,15 @@ PeerCastStation による PeerCast リレーを Windows PC に任せ、Tailscale
 
 ## 配布 ZIP から起動
 
-[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.0.0)から `PecaOneConnect-v1.0.0-portable-r3-win-x64.zip` を取得し、右クリックして「すべて展開」を選び、展開直下の `ぺかわん コネクト.exe` を起動してください。.NETランタイムとFFmpegを同梱しているため、別途取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。r3ではEXE・ウィンドウ・通知領域のアイコンを「ぺかわん」の画像に更新しています。
+[GitHub Releases](https://github.com/valai/peercast_encoder_for_pecaone/releases/tag/v1.1.0)から `PecaOneConnect-v1.1.0-portable-win-x64.zip` を取得し、右クリックして「すべて展開」を選び、展開直下の `ぺかわん コネクト.exe` を起動してください。.NETランタイムとFFmpegを同梱しているため、別途取得やスクリプト実行は不要です。PeerCastStationとTailscaleは別途必要です。
 
 展開直下には `ぺかわん コネクト.exe`、`はじめに.txt`、`app/` の3つだけを置き、アプリ本体・DLL・FFmpeg・ライセンスは `app/` にまとめています。移動するときはフォルダ全体を移動してください。デスクトップにはEXEのショートカットを作成できます。
 
 Windows へのサインイン時にアプリを起動したい場合は、アプリの「接続設定」で「Windows へのサインイン時に起動する」をオンにして設定を保存してください。初期状態はオフです。
 
-導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。[はじめての接続ガイド（PDF）](docs/PecaOneConnect-v1.0.0-quick-start-ja.pdf)では、ZIP展開、PeerCastStationの準備、PCとスマホへのTailscale導入、QRペアリング、視聴開始までを2ページにまとめています。PDFは同じGitHubリリースのアセットからも取得できます。
+導入手順と接続設定は [docs/FIRST_RUN.md](docs/FIRST_RUN.md) を参照してください。[はじめての接続ガイド（PDF）](docs/PecaOneConnect-v1.0.0-quick-start-ja.pdf)では、ZIP展開、PeerCastStationの準備、PCとスマホへのTailscale導入、QRペアリング、視聴開始までを2ページにまとめています。PDFはv1.0.0リリースから取得できます。
 
-`SHA256SUMS-r3.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
+`SHA256SUMS.txt` はダウンロード後の整合性確認用です。展開せずZIP内から直接実行すると、必要なファイルを見つけられません。
 
 ## 開発環境から起動
 

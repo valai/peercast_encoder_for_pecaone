@@ -6,6 +6,15 @@
 
 アイコン更新版のr3は `Build-PortableLayout.ps1 -UpdatedAppDirectory artifacts/updated-app` で、再ビルドしたアプリ本体を公開済みの同梱版に組み合わせて作成します。アプリ本体と起動用EXEの対応ソースをr3用のソースZIPに保存します。
 
+## v1.1.0の配布物
+
+- `PecaOneConnect-v1.1.0-portable-win-x64.zip`: 推奨する同梱版。v1.0.0の検証済みランタイムとFFmpegを引き継ぎ、v1.1.0のアプリと起動用EXEを収録します。
+- `PecaOneConnect-v1.1.0-source.zip`: リリース対象コミットのソース。
+- `FFmpeg-9.0.2-x264-source.zip`、`QRCoder-1.8.0-source.zip`: 同梱バイナリの対応ソース。
+- `SHA256SUMS.txt`: 配布ZIPのチェックサム。
+
+同梱版は `scripts/Build-PortableRelease.ps1` で作成します。スクリプトはv1.0.0の公開済みportable-r3 ZIPをSHA-256で確認してから展開し、更新したアプリ・起動用EXEと現行の導入資料を組み合わせます。ランタイム依存DLLの差分があれば作成を中止します。
+
 ## v1.0.0の配布物
 
 - `PecaOneConnect-v1.0.0-portable-r3-win-x64.zip`: 推奨する同梱版。r3はアプリアイコンの更新版です。展開直下は起動用EXE、はじめに.txt、appフォルダ。アプリ、.NETランタイム、FFmpeg、ライセンスをappにまとめています。
@@ -79,4 +88,4 @@ v1.0.0にはコード署名を付けていません。署名用の証明書・�
 
 ## 次のバージョンを公開する場合
 
-プロジェクトのバージョン、ZIP名、導入手順、リリースノート、ワークフローの対象タグを更新します。.NETランタイムやQRCoderを更新した場合は `licenses/` の本文と第三者ソースの参照も更新し、テスト後に新しいタグから公開します。
+プロジェクトのバージョン、ZIP名、導入手順、リリースノート、ワークフローの対象タグを更新します。.NETランタイムやQRCoderを更新した場合は `licenses/` の本文と第三者ソースの参照も更新し、必要な検証を行って新しいタグから公開します。

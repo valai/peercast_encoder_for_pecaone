@@ -15,16 +15,19 @@ $original = [IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($OriginalA
 $count = 0
 try {
     foreach ($entry in $original.Entries | Where-Object { $_.FullName -match '\.(exe|dll)$' }) {
-        $file = Join-Path (Join-Path $validation 'app') $entry.FullName
-        if ($UpdatedAppDirectory -and $entry.FullName -in @('PecaOneRelay.exe', 'PecaOneRelay.dll')) {
-            $expected = (Get-FileHash -LiteralPath (Join-Path $UpdatedAppDirectory $entry.FullName) -Algorithm SHA256).Hash
-            if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('Updated application file mismatch: ' + $entry.FullName) }
+        if ($entry.FullName -eq 'ぺかわん コネクト.exe') { continue }
+        $relative = $entry.FullName -replace '^app/', ''
+        $relative = $relative -replace '/', '\'
+        $file = Join-Path (Join-Path $validation 'app') $relative
+        if ($UpdatedAppDirectory -and $relative -in @('PecaOneRelay.exe', 'PecaOneRelay.dll')) {
+            $expected = (Get-FileHash -LiteralPath (Join-Path $UpdatedAppDirectory $relative) -Algorithm SHA256).Hash
+            if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('Updated application file mismatch: ' + $relative) }
             continue
         }
         $stream = $entry.Open()
         $sha = [Security.Cryptography.SHA256]::Create()
         try { $expected = [Convert]::ToHexString($sha.ComputeHash($stream)) } finally { $stream.Dispose(); $sha.Dispose() }
-        if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('A published application binary changed: ' + $entry.FullName) }
+        if ((Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne $expected) { throw ('A published application binary changed: ' + $relative) }
         $count++
     }
 } finally { $original.Dispose() }

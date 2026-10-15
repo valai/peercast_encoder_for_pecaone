@@ -25,7 +25,9 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Publish restore failed' }
         & $dotnet publish src\PecaOneRelay\PecaOneRelay.csproj -c Release -r win-x64 --self-contained true --no-restore -p:IncludeFfmpeg=$includeFfmpeg -o $packageDirectory
         if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
-        $archiveName = if ($ForRelease) { 'PecaOneConnect-v1.0.0-win-x64.zip' } else { 'PecaOneRelay-win-x64.zip' }
+        $project = [xml](Get-Content -LiteralPath (Join-Path $repo 'src\PecaOneRelay\PecaOneRelay.csproj') -Raw)
+        $version = $project.Project.PropertyGroup.Version
+        $archiveName = if ($ForRelease) { 'PecaOneConnect-v' + $version + '-win-x64.zip' } else { 'PecaOneRelay-win-x64.zip' }
         $archive = Join-Path $repo ('publish\' + $archiveName)
         if ($ForRelease) {
             Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Install-FFmpeg.ps1') -Destination $packageDirectory

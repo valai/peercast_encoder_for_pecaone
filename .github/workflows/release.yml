@@ -1,12 +1,12 @@
-name: Release v1.0.0
+name: Release v1.1.0
 
 on:
   push:
     tags:
-      - v1.0.0
+      - v1.1.0
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -15,54 +15,93 @@ concurrency:
 jobs:
   release:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: 10.0.401
-      - name: Build and test public package
-        shell: pwsh
-        run: ./scripts/build.ps1 -ForRelease
-      - name: Prepare corresponding source and checksums
+      - name: Build and test the native launcher
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          git archive --format=zip --prefix=PecaOneConnect-v1.0.0-source/ --output=publish/PecaOneConnect-v1.0.0-source.zip HEAD
-          if ($LASTEXITCODE -ne 0) { throw 'Source archive failed' }
-          $qrcoderSource = 'https://codeload.github.com/Shane32/QRCoder/zip/443d5a1f76debf203b1e252efee6996a15d41f5c'
-          Invoke-WebRequest -Uri $qrcoderSource -OutFile publish/QRCoder-1.8.0-source.zip -TimeoutSec 120
+          ./scripts/Build-Launcher.ps1
+          ./scripts/Test-Launcher.ps1
+      - name: Build the application and portable package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path publish, artifacts/original-portable -Force | Out-Null
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $sourceZip = [IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'publish/QRCoder-1.8.0-source.zip'))
+          $base = 'publish/PecaOneConnect-v1.0.0-portable-r3-win-x64.zip'
+          Invoke-WebRequest -Uri 'https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/PecaOneConnect-v1.0.0-portable-r3-win-x64.zip' -OutFile $base -TimeoutSec 180
+          if ((Get-FileHash -LiteralPath $base -Algorithm SHA256).Hash -ne '79492ffe4dcfb43209b38d54388e05a64c150e0a84de9364f7c57924e425ddad') { throw 'The published portable archive does not match its verified checksum.' }
+          [IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $PWD $base), (Join-Path $PWD 'artifacts/original-portable'))
+          $env:PECAONE_FFMPEG_DIR = Join-Path $PWD 'artifacts/original-portable/app/ffmpeg'
+          dotnet restore PecaOneRelay.slnx --configfile NuGet.Config
+          if ($LASTEXITCODE -ne 0) { throw 'Test restore failed.' }
+          dotnet test PecaOneRelay.slnx -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw 'Application tests failed.' }
+          dotnet restore src/PecaOneRelay/PecaOneRelay.csproj -r win-x64 --configfile NuGet.Config
+          if ($LASTEXITCODE -ne 0) { throw 'Publish restore failed.' }
+          dotnet publish src/PecaOneRelay/PecaOneRelay.csproj -c Release -r win-x64 --self-contained true --no-restore -p:IncludeFfmpeg=false -o artifacts/updated-app
+          if ($LASTEXITCODE -ne 0) { throw 'Application publish failed.' }
+          ./scripts/Build-PortableRelease.ps1 -Version 1.1.0 -AppArchive $base -UpdatedAppDirectory artifacts/updated-app -LauncherDirectory artifacts/launcher
+          ./scripts/Test-PortableLayout.ps1 -Archive publish/PecaOneConnect-v1.1.0-portable-win-x64.zip -OriginalArchive $base -UpdatedAppDirectory artifacts/updated-app -LaunchApp
+      - name: Prepare source archives and checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assets = @(
+            'FFmpeg-9.0.2-x264-source.zip',
+            'QRCoder-1.8.0-source.zip'
+          )
+          $urls = @(
+            'https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/FFmpeg-9.0.2-x264-source.zip',
+            'https://github.com/valai/peercast_encoder_for_pecaone/releases/download/v1.0.0/QRCoder-1.8.0-source.zip'
+          )
+          $hashes = @(
+            '71a909adc5858fe88f6c822cff3ef22c2b7c15d2815d19b7de806885e1f87e22',
+            '13a290078d4052f5daa12267921ee4e78ed34b0daaa595e5c1aa20aced4f5cc7'
+          )
+          for ($i = 0; $i -lt $assets.Count; $i++) {
+            $path = Join-Path publish $assets[$i]
+            Invoke-WebRequest -Uri $urls[$i] -OutFile $path -TimeoutSec 180
+            if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hashes[$i]) { throw ('Source archive checksum mismatch: ' + $assets[$i]) }
+          }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $qrcoder = [IO.Compression.ZipFile]::OpenRead((Join-Path $PWD 'publish/QRCoder-1.8.0-source.zip'))
           try {
-            if (-not ($sourceZip.Entries | Where-Object { $_.FullName.EndsWith('/LICENSE') -or $_.FullName.EndsWith('/LICENSE.txt') })) {
-              throw 'QRCoder source archive has no license'
-            }
-          } finally { $sourceZip.Dispose() }
-          $assets = @('PecaOneConnect-v1.0.0-win-x64.zip', 'PecaOneConnect-v1.0.0-source.zip', 'QRCoder-1.8.0-source.zip')
-          $checksums = foreach ($asset in $assets) {
-            ((Get-FileHash -LiteralPath (Join-Path 'publish' $asset) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $asset)
+            if (-not ($qrcoder.Entries | Where-Object { $_.FullName.EndsWith('/LICENSE') -or $_.FullName.EndsWith('/LICENSE.txt') })) { throw 'QRCoder source archive has no license.' }
+          } finally { $qrcoder.Dispose() }
+          git -c core.autocrlf=false archive --format=zip --prefix=PecaOneConnect-v1.1.0-source/ --output=publish/PecaOneConnect-v1.1.0-source.zip HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Application and launcher source archive creation failed.' }
+          $files = @('PecaOneConnect-v1.1.0-portable-win-x64.zip', 'PecaOneConnect-v1.1.0-source.zip', 'FFmpeg-9.0.2-x264-source.zip', 'QRCoder-1.8.0-source.zip')
+          $checksums = foreach ($file in $files) {
+            (Get-FileHash -LiteralPath (Join-Path publish $file) -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $file
           }
           $checksums | Set-Content -LiteralPath publish/SHA256SUMS.txt -Encoding ascii
-      - name: Publish release with all assets
+      - name: Publish the release with all assets
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
           $repo = '${{ github.repository }}'
-          $tag = 'v1.0.0'
+          $tag = 'v1.1.0'
           gh release view $tag --repo $repo 2>$null
           if ($LASTEXITCODE -eq 0) { throw 'A release already exists for this tag; it will not be overwritten.' }
-          $assets = @('publish/PecaOneConnect-v1.0.0-win-x64.zip', 'publish/PecaOneConnect-v1.0.0-source.zip', 'publish/QRCoder-1.8.0-source.zip', 'publish/SHA256SUMS.txt')
-          gh release create $tag @assets --repo $repo --verify-tag --title 'ぺかわん コネクト v1.0.0' --notes-file docs/RELEASE-v1.0.0.md --draft
-          if ($LASTEXITCODE -ne 0) { throw 'Draft creation or asset upload failed' }
+          $assets = @('publish/PecaOneConnect-v1.1.0-portable-win-x64.zip', 'publish/PecaOneConnect-v1.1.0-source.zip', 'publish/FFmpeg-9.0.2-x264-source.zip', 'publish/QRCoder-1.8.0-source.zip', 'publish/SHA256SUMS.txt')
+          gh release create $tag @assets --repo $repo --verify-tag --title 'ぺかわん コネクト v1.1.0' --notes-file docs/RELEASE-v1.1.0.md --draft
+          if ($LASTEXITCODE -ne 0) { throw 'Draft creation or asset upload failed.' }
           $release = gh release view $tag --repo $repo --json assets,isDraft | ConvertFrom-Json
-          if ($LASTEXITCODE -ne 0 -or -not $release.isDraft) { throw 'Draft verification failed' }
+          if ($LASTEXITCODE -ne 0 -or -not $release.isDraft) { throw 'Draft verification failed.' }
           foreach ($asset in $assets) {
             $file = Get-Item -LiteralPath $asset
             $uploaded = @($release.assets | Where-Object { $_.name -eq $file.Name })
             if ($uploaded.Count -ne 1 -or $uploaded[0].size -ne $file.Length) { throw ('Asset verification failed: ' + $file.Name) }
           }
           gh release edit $tag --repo $repo --draft=false --latest
-          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }
